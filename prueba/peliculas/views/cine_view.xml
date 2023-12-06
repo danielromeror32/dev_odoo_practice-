@@ -12,8 +12,10 @@
                         <page name="name" string="Salas de cine">
                             <group name="name" string="Información de salas">
                                 <group>
-                                    <field name="cines_ids" widget="many2many_tags"></field>
-                                    <field name="movie_price" widget="monetary" options="{'currency_field' : 'currency_id'}"></field>
+                                    <field name="name_sala"></field>
+                                    <field name="room_number"></field>
+                                    <field name="ticket_price"></field>
+                                    <field name="cinema_owner"></field>  
                                 </group>
                             </group>
                         </page>

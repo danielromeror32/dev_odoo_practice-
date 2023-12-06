@@ -5,7 +5,7 @@ from odoo import models, fields, api
 
 class RecursoCinema(models.Model):
     _name = "recurso.cinema"
-    
+
     name = fields.Char(string="Recurso")
     descripcion = fields.Char(sting="Descripción")
     precio = fields.Float(string="Precio")

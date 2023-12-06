@@ -14,9 +14,24 @@
         <field name="view_mode">tree,form,kanban</field>
     </record>
 
+    <!-- <record id="action_open_cine_prueba" model="ir.actions.act_window">
+        <field name="name">Cineprueba</field>
+        <field name="res_model">cine.prueba</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record> -->
+
+    <!-- <record id="action_open_cine" model="ir.actions.act_window">
+        <field name="name">Cine</field>
+        <field name="res_model">cine</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record> -->
 
     <menuitem id="menu_principal" name="Peliculas"/>
     <menuitem id="menu_horizontal" name="Mis Modelos" parent="menu_principal"/>
+    <!-- <menuitem id="menu_horizontal_cine" name="Cine" parent="menu_principal"/> -->
     <menuitem id="menu_vertical_presupuesto" name="Presupuesto" parent="menu_horizontal" action="action_open_presupuesto"/>
     <menuitem id="menu_vertical_cinema" name="Recurso Cinematografico" parent="menu_horizontal" action="action_open_cinema"/>
+    <!-- <menuitem id="menu_vertical_cine_prueba" name="cine_prueba" parent="menu_horizontal" action="action_open_cine_prueba"/> -->
+    <!-- <menuitem id="menu_vertical_cine" name="Salas de cine" parent="menu_horizontal_cine" action="action_open_cine"/> -->
+
 </odoo>

@@ -10,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 class Presupuesto(models.Model):
     _name = "presupuesto"
+    _description = "Modulo para el presupuesto de peliculas"
     _inherit = ["mail.thread", "mail.activity.mixin", "image.mixin"]
-   
+
     @api.depends("detalle_ids")
     def _compute_total(self):
         for record in self:
@@ -32,7 +33,7 @@ class Presupuesto(models.Model):
 
     clasificacion = fields.Selection(
         selection=[
-            ("G", "G"), 
+            ("G", "G"),
             ("PG", "PG"),
             ("PG-13", "PG-13"),
             ("R", "R"),
@@ -167,6 +168,7 @@ class Presupuesto(models.Model):
 
 class PresupuestoDetalle(models.Model):
     _name = "presupuesto.detalle"
+
     presupuesto_id = fields.Many2one(comodel_name="presupuesto", string="Presupuesto")
 
     name = fields.Many2one(

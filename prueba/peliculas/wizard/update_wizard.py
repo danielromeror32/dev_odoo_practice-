@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-       # "./views/cine_view.xml",
 import logging
 from odoo import models, fields, api
 

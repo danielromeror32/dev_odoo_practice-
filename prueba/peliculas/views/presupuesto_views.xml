@@ -67,7 +67,7 @@
                                 <field name="fecha_aprobado" readonly="1"></field>
                             </group>
                             <group>
-                            <field name="currency_id"></field>
+                                <field name="currency_id"></field>
                                 <field name="campos_ocultos" widget="boolean_toggle" groups="peliculas.group_pelicula_administrador"></field>
                             </group>
                         </group>
@@ -105,7 +105,7 @@
                             <group colspan = "6">
                                 <field name="actor_id" widget="many2many_tags" options="{'no_create': True, 'no_open':True}"
                                 domain="[('category_id', 'in',[categoria_actor_id])]"></field>
-                                <field name="categoria_actor_id" invisible="1"></field>
+                                <field name="categoria_actor_id" invisible="0"></field>
                                 <field name="opinion"></field>
                             </group>
 
@@ -120,7 +120,7 @@
                     <field name="message_ids"></field>
                 </div>
             </form>
-        </field>
+        </field>    
     </record>
 
     <record id="view_presupuesto_view" model="ir.ui.view">

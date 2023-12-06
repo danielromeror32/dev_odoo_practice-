@@ -12,9 +12,7 @@
                             <field name="list_available_pelicula" widget="many2many_tags" options="{'no_create': True, 'no_open':True}"></field>
                             <field name="cinema_owner"></field>
                             <field name="room_number"></field>
-                            <!-- <field name="ticket_price"></field> -->
                             <field name="ticket_price" widget="monetary" options="{'currency_field' : 'currency_id'}"></field>
-                            <!-- <field name="impuestos"></field> -->
                         </group>
                        
                     </sheet>

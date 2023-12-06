@@ -10,14 +10,13 @@
     "summary": "Modulo de presupuestos para peliculas",
     "description": """Modulos para hacer presupuestos de peliculas""",
     "data": [
-        
+        "security/ir.model.access.csv",
         "security/security.xml",
-          "security/ir.model.access.csv",
-        "views/menu.xml",
-        "./wizard/update_wizard_views.xml",
-        "./report/reporte_pelicula.xml",
         "./data/categoria.xml",
         "./data/secuencia.xml",
-         "./views/presupuesto_views.xml",
+        "./wizard/update_wizard_views.xml",
+        "./report/reporte_pelicula.xml",
+        "views/menu.xml",
+        "./views/presupuesto_views.xml",
     ],
 }
