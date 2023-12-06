@@ -3,7 +3,7 @@
 {
     "name": "modulo de Exdoo Request",
     "version": "1.0",
-    "depends": ["contacts", "mail", "sale_management"],
+    "depends": ["contacts", "sale_management"],
     "author": "Daniel Romero",
     "category": "request",
     "website": "http://www.google.com",

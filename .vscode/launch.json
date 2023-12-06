@@ -10,7 +10,7 @@
         "request": "launch",
         "program": "C:/Users/DANIEL/Documents/Odoo/server/odoo-bin",
         "console": "integratedTerminal",
-        "args": ["-c", "C:/Users/DANIEL/Documents/Odoo/server/c14.conf" , "-d", "odoo", "-u", "peliculas,cine"]
+        "args": ["-c", "C:/Users/DANIEL/Documents/Odoo/server/c14.conf" , "-d", "odoo", "-u", "exdoo_request"]
       }
     ]
   }
