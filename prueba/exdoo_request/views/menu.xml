@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="action_open_exdoo" model="ir.actions.act_window">
+        <field name="name">Solicitudes</field>
+        <field name="res_model">exdoo.request</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record>
+  
+    <menuitem id="menu_vertical_cine_presupuesto" 
+        name="Solicitudes" 
+        parent="sale.sale_order_menu" 
+        action="action_open_exdoo" 
+        sequence="0"/>
+
+   
+</odoo>

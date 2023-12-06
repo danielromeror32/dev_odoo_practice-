@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<odoo>
+    <record id="view_presupuesto_tree" model="ir.ui.view">
+        <field name="name">Vista de lista de presupuesto</field>
+        <field name="model">presupuesto</field>
+        <field name="arch" type="xml"/>
+        <tree>
+            <field name="name"></field>
+        </tree>
+    </record>
+</odoo>

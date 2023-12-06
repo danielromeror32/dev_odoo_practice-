@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_cine_form" model="ir.ui.view">
+        <field name="name">vista.cine.formulario</field>
+        <field name="model">cine</field>
+        <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group >
+                            <field name="name"></field>
+                            <field name="list_available_pelicula" widget="many2many_tags" options="{'no_create': True, 'no_open':True}"></field>
+                            <field name="cinema_owner"></field>
+                            <field name="room_number"></field>
+                            <!-- <field name="ticket_price"></field> -->
+                            <field name="ticket_price" widget="monetary" options="{'currency_field' : 'currency_id'}"></field>
+                            <!-- <field name="impuestos"></field> -->
+                        </group>
+                       
+                    </sheet>
+                </form>
+            </field>
+    </record>
+</odoo>

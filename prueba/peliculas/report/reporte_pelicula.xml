@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_presupuestos" model="ir.actions.report">
+        <field name="name">Presupuesto!</field>
+        <field name="model">presupuesto</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">peliculas.report_presupuesto</field>
+        <field name="report_file">peliculas.report_presupuesto</field>
+        <field name="print_report_name">('Presupuesto - %s' %(object.name))</field>
+        <field name="binding_model_id" ref="model_presupuesto"></field>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_presupuesto">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Report title</h2>
+                        <center>
+                            <t t-if="o.state == 'borrador'" >
+                              <div class="alert alert-danger" role="alert">
+                                El estado del presupuesto es borrador 
+                                </div>  
+                            </t>
+                            <t t-else="">
+                                <div class="alert alert-primary" role="alert">
+                                    El estado del presupuesto es aprobado 
+                                </div>
+                            </t>
+                        </center>
+                        <div class="row">
+                            <div class="col-3">
+                                <img t-attf-src="data:image/png;base64, {{o.image_1920}}" style="max-width:200px;"></img>
+                            </div>
+                            <div class="col-9">
+                                <h2><span t-field="o.name"></span></h2>
+                                <ul class="list-inline" style="font-size:20px;">
+                                    <li t-if="o.clasificacion">Clasificación: <span t-field="o.clasificacion"></span></li>
+                                    <li t-if="o.fecha_estreno">Estreno: <span t-field="o.fecha_estreno"></span></li>
+                                    <li t-if="o.genero_ids">Genero: <span t-field="o.genero_ids"></span></li>
+                                </ul>
+                                <ul class="list-inline" style="font-size:20px;padding-top:30px;">
+                                    <li t-if="o.fecha_creacion">Fecha creacion: <span t-field="o.fecha_creacion"></span></li>
+                                    <li t-if="o.fecha_aprobado">Fecha aprobado: <span t-field="o.fecha_aprobado"></span></li>
+                                    <li t-if="o.create_uid">Vendedor: <span t-field="o.create_uid"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <table class="table table-sm" style="margin-top:30px;">
+                            <thead>
+                                <th>Imagen</th>
+                                <th>Recurso</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Importe</th>
+                            </thead>
+                            <tbody>
+                                <t t-set="ctd_lineas" t-value="0"></t>
+                                <tr t-foreach="o.detalle_ids" t-as="l">
+                                    <td>
+                                        <img t-attf-src="data:image/png;base64, {{l.imagen}}" style="max-width:80px;"></img>
+                                    </td>
+                                    <td><span t-field="l.name"></span></td>
+                                    <td><span t-field="l.cantidad"></span></td>
+                                    <td><span t-field="l.precio"></span></td>
+                                    <td><span t-field="l.importe"></span></td>
+                                    <t t-set="ctd_lineas" t-value="ctd_lineas+1"></t>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row justify-content-end" style="padding-top:30px;">
+                        <div class="col-3">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td>Subotal:</td>
+                                        <td class="text-rigth"><sapn t-field="o.base"></sapn></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Impuestos:</td>
+                                        <td class="text-rigth"><sapn t-field="o.impuestos"></sapn></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total:</td>
+                                        <td class="text-rigth"><sapn t-field="o.total"></sapn></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="padding-top:30px;">
+                        <span>El presente presupuesto cuenta con <t t-esc="ctd_lineas"/> lineas de detalle.</span>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

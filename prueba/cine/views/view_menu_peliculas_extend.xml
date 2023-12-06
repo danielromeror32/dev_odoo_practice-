@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+   <data>
+        <record id="cine_view_inherit" model="ir.ui.view">
+            <field name="name">cine.view.inherit</field>
+            <field name="model">presupuesto</field>
+            <field name="inherit_id" ref="peliculas.view_presupuesto_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//form//sheet//notebook" position="inside">
+                        <page name="name" string="Salas de cine">
+                            <group name="name" string="Información de salas">
+                                <group>
+                                    <field name="cines_ids" widget="many2many_tags"></field>
+                                    <field name="ticket_price" widget="monetary" options="{'currency_field' : 'currency_id'}"></field>
+                                </group>
+                            </group>
+                        </page>
+                </xpath>
+            </field>
+        </record>
+   </data>
+</odoo>

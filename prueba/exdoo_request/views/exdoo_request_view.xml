@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="exdoo_request_view_form" model="ir.ui.view">
+        <field name="name">exdoo_request.view.form</field>
+        <field name="model">exdoo.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
+                    <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
+                    <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
+                </header>
+                <sheet>
+                    <group string="Nuevo">
+                        <group>
+                            <field name="name"></field>
+                            <field name="cliente"></field>
+                            <field name="fecha"></field>
+                            <field name="fecha_confirmación"></field>
+                        </group>
+                        <group>
+                            <field name="termino_pago"></field>
+                            <field name="usuario"></field>
+                            <field name="Company"></field>
+                            <!-- <field name="ticket_price" widget="monetary" invisible="1"></field> -->
+                            <field name="currency_id"></field>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="linea de orden">
+                            <field name="orderLines_ids">
+                                <tree editable="bottom">
+                                    <control><create name="add_product_control" string="Agregar producto"></create></control>
+                                    <field name="producto"></field>
+                                    <field name="cantidad"></field>
+                                    <field name="unidades_medida"></field>
+                                    <field name="list_price"></field>
+                                    <field name="taxes_id" widget="many2many_tags"></field>
+                                    <field name="total_impuestos" invisible="0"></field>
+                                    <!-- <field name="impuesto_subtotal" invisible="0"></field> -->
+                                    <field name="subtotal"></field>
+                                    <field name="total"></field>
+                                </tree>
+                            </field>
+                            <group class="mt-2 mt-md-0">
+                                <group class="oe_subtotal_footer oe_right">
+                                    <field name="base" widget="monetary" options="{'currency_field' : 'currency_id'}"></field>
+                                    <field name="impuestos"></field>
+                                    <div class="oe_subtotal_footer_separator oe_line o_td_label">
+                                        <label for="total"></label>
+                                    </div>
+                                    <field name="total" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"
+                                    options="{'currency_field': 'currency_id'}" ></field>
+                                </group>
+                                <div class="oe_clear"></div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+
+
+
+</odoo>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_update_wizard_form" model="ir.ui.view">
+        <field name="name">vista formulario para popup update wizard</field>
+        <field name="model">update.wizard</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <field name="name"></field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Actualizar" class="oe_highlight" type="object" name="update_vista_general"></button>
+                    <button string="Cancelar" special="cancel"></button>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_open_update_wizard" model="ir.actions.act_window">
+        <field name="name">Actualizar campo vista general</field>
+        <field name="res_model">update.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

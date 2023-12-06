@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+
+    <record id="module_category_pelicula" model="ir.module.category">
+        <field name="name">Peliculas</field>
+        <field name="sequence">1</field>
+    </record>
+
+    <record id="module_category_pelicula_pelicula" model="ir.module.category">
+        <field name="name">Peliculas</field>
+        <field name="sequence">1</field>
+        <field name="parent_id" ref="module_category_pelicula"></field>
+    </record>
+
+    <record id="group_pelicula_usuario" model="res.groups">
+        <field name="name">Usuario: solo puede ver sus propios presupuestos</field>
+        <field name="category_id" ref="module_category_pelicula_pelicula"></field>
+    </record>
+
+    <record id="group_pelicula_administrador" model="res.groups">
+        <field name="name">Administrador</field>
+        <field name="category_id" ref="module_category_pelicula_pelicula"></field>
+        <field name="implied_ids" eval="[(4, ref('group_pelicula_usuario'))]"></field>
+    </record>
+
+    <record id="pelicula_presupuesto_propio_rule" model="ir.rule">
+        <field name="name">Presupuestos de peliculas propios</field>
+        <field name="model_id" ref="model_presupuesto"></field>
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_pelicula_usuario'))]"></field>
+    </record>
+
+    <record id="pelicula_presupuesto_todos_rule" model="ir.rule">
+        <field name="name">Presupuestos de peliculas todos</field>
+        <field name="model_id" ref="model_presupuesto"></field>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_pelicula_administrador'))]"></field>
+    </record>
+</odoo>
