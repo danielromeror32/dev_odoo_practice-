@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+acceso_exdoo_administrador,acceso presupuesto exdoo,model_exdoo_request,group_exdoo_administrador,1,1,1,1
+acceso_exdoo_request_administrador,acceso presupuesto exdoo,model_request_order_lines,group_exdoo_administrador,1,1,1,1
+acceso_exdoo_usuario,acceso presupuesto exdoo,model_exdoo_request,group_exdoo_usuario,1,1,1,1
+acceso_exdoo_request_usuario,acceso presupuesto exdoo,model_request_order_lines,group_exdoo_usuario,1,1,1,1

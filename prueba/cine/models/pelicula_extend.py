@@ -20,4 +20,4 @@ class PresupuestoExtend(models.Model):
         comodel_name="res.currency",
         string="Moneda",
         default=lambda self: self.env.company.currency_id.id,
-        )
+        )   

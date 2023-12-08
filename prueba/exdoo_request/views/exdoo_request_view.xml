@@ -5,42 +5,63 @@
         <field name="name">exdoo_request.view.form</field>
         <field name="model">exdoo.request</field>
         <field name="arch" type="xml">
+            
             <form>
                 <header>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
                     <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
                 </header>
+             
                 <sheet>
-                    <group string="Nuevo">
+                    <div class="oe_title">
+                        <div class="o_row">
+                            <h1 style="display: flex;">
+                                <field name="name" 
+                                   default_focus="1" class="oe_inline"></field>
+                            </h1>
+                        </div>
+                    </div>
+                    <group>
                         <group>
-                            <field name="name"></field>
-                            <field name="cliente"></field>
-                            <field name="fecha"></field>
-                            <field name="fecha_confirmación"></field>
+                            <field name="name"  readonly="1" invisible="1" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="cliente" required="1" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="fecha" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="fecha_confirmación" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <!-- <field name="termino_pagos" attrs="{'readonly':[('state','!=','borrador')]}"></field> -->
+                            <!-- <field name="termino_pagos" widget="many2many_tags" groups="exdoo_request.group_exdoo_administrador,exdoo_request.group_exdoo_usuario"
+                                attrs="{'readonly':[('state','!=','borrador'), ('exdoo_request.group_exdoo_usuario', 'in', groups)]}" ></field> -->
+                            <field name="termino_pagos" widget="many2many_tags" 
+                                groups="exdoo_request.group_exdoo_administrador"
+                                attrs="{'readonly': [('state', '!=', 'borrador')]}" />
+                            <field name="termino_pagos" widget="many2many_tags" 
+                                groups="exdoo_request.group_exdoo_usuario"
+                                readonly="1" />
+
+                            <field name="terminos_pagos_id" invisible="1"></field>
                         </group>
                         <group>
-                            <field name="termino_pago"></field>
-                            <field name="usuario"></field>
-                            <field name="Company"></field>
+                            
+                            <field name="usuario" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="company" ></field>
                             <!-- <field name="ticket_price" widget="monetary" invisible="1"></field> -->
-                            <field name="currency_id"></field>
-                        </group>
+                            <field name="currency_id" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                        </group>    
                     </group>
                     <notebook>
-                        <page name="linea de orden">
-                            <field name="orderLines_ids">
+                        <page string="linea de orden" >
+                            <field name="orderLines_ids" required="1" attrs="{'readonly':[('state','!=','borrador')]}">
                                 <tree editable="bottom">
                                     <control><create name="add_product_control" string="Agregar producto"></create></control>
-                                    <field name="producto"></field>
+                                    <field name="producto" required="1" ></field>
                                     <field name="cantidad"></field>
                                     <field name="unidades_medida"></field>
                                     <field name="list_price"></field>
                                     <field name="taxes_id" widget="many2many_tags"></field>
-                                    <field name="total_impuestos" invisible="0"></field>
+                                    <field name="total_impuestos" invisible="1"></field>
                                     <!-- <field name="impuesto_subtotal" invisible="0"></field> -->
-                                    <field name="subtotal"></field>
-                                    <field name="total"></field>
+                                    <field name="subtotal" readonly="1" force_save="1"></field>
+                                    <field name="total" readonly="1" force_save="1"></field>
                                 </tree>
                             </field>
                             <group class="mt-2 mt-md-0">
@@ -62,8 +83,62 @@
         </field>
     </record>
 
+    <record id="exdoo_request_view" model="ir.ui.view">
+        <field name="name">Vista lista de exdoo</field>
+        <field name="model">exdoo.request</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted = "state == 'cancelado'" decoration-success="state == 'confirmado'">
+               
+                <field name="name"></field>
+                <field name="fecha"></field>
+                <field name="fecha_confirmación"></field>
+                <field name="cliente"></field>
+                <field name="usuario"></field>
+                <field name="company"></field>
+                <field name="total" sum="suma_total"></field>
+                <field name="state" widget="badge" decoration-success="state == 'confirmado'" decoration-danger="state == 'cancelado'"></field>
+            </tree>
+        </field>
+    </record>
+    <record id="exdoo_request_filter"  model="ir.ui.view">
+        <field name="name">exdoo.request.filter</field>
+        <field name="model">exdoo.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- Otros campos y etiquetas -->
+                <filter string="Borradores" name="state_draft" domain="[('state', '=', 'borrador')]"/>
+                <filter string="Confirmados" name="state_done" domain="[('state', '=', 'confirmado')]"  context="{'default_state_draft': True}"/>
+                <filter string="Usuario" name="salesperson" domain="[]" context="{'group_by': 'usuario'}"/>
+                <!-- Agrega otros filtros según tus necesidades -->
+            </search>
+        </field>
+    </record>
+    <record id="view_exdoo_kanban" model="ir.ui.view">
+        <field name="name">Vista kanban de exdoo</field>
+        <field name="model">exdoo.request</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"></field>
+                <field name="currency_id"></field>
 
-
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"></field>
+                                </strong>
+                                <field name="fecha"></field>
+                                <div>
+                                    <field name="total" widget="monetary" options="{'currency_field':'currency_id','field:digits':True}"></field>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
 
 
 </odoo>

@@ -1,20 +1,55 @@
 # -*- coding:utf-8 -*-
 import logging
 from odoo import models, fields, api
+from odoo.exceptions import UserError
+
+logger = logging.getLogger(__name__)
 
 
 class ExdooRequest(models.Model):
     _name = "exdoo.request"
 
-    name = fields.Char(string="Secuencia")
+    name = fields.Char(string="Secuencia", readonly=True, copy=False)
     fecha = fields.Datetime(
         string="Fecha", copy=False, default=lambda self: fields.Datetime.now()
     )
     fecha_confirmación = fields.Date(string="Fecha de confirmación")
+
     cliente = fields.Many2one(string="Cliente", comodel_name="res.partner")
-    termino_pago = fields.Many2one("account.payment.term", string="Termino de pago")
-    usuario = fields.Many2one("res.users", string="Usuario")
-    Company = fields.Many2one("res.company", string="Compañía")
+
+    termino_pagos = fields.Many2many(
+        "account.payment.term",
+        string="Termino de pago",
+        domain="[('id', 'in', terminos_pagos_id)]",
+       
+    )
+
+    terminos_pagos_id = fields.Many2many(
+        "account.payment.term",
+        string="Términos de pago permitidos",
+        compute="_compute_terminos_pago_id",
+    )
+
+    @api.depends("cliente")
+    def _compute_terminos_pago_id(self):
+        self.termino_pagos = False
+        terminos_pago = self.cliente.payment_term
+        self.terminos_pagos_id = [(6, 0, terminos_pago.ids)]
+        self.termino_pagos = self.terminos_pagos_id
+        
+
+    usuario = fields.Many2one(
+        "res.users", string="Usuario", default=lambda self: self.env.user, required=True
+    )
+    company = fields.Many2one(
+        "res.company",
+        string="Compañía",
+        default=lambda self: self.env.company,
+        required=True,
+    )
+    # Company = fields.Many2one("res.company", string="Compañía",
+    #                           default = lambda self : self.env["res.company"])
+
     # ticket_price = fields.Monetary()
     currency_id = fields.Many2one(
         comodel_name="res.currency",
@@ -46,9 +81,7 @@ class ExdooRequest(models.Model):
                 impuestos += line.total_impuestos
             # taxes = record.taxes_id.compute_all(
             #     price_unit=sub_total,
-            #     quantity=1.0,
-
-            # )
+            #     quantity=1.0,)
             # record.total_impuestos = taxes["total_included"] - taxes["total_excluded"]
             record.base = sub_total
             record.impuestos = impuestos
@@ -58,25 +91,32 @@ class ExdooRequest(models.Model):
         comodel_name="request.order.lines",
         inverse_name="exdoo_request_id",
         string="Lineas de orden",
+        required=True,
     )
 
     base = fields.Monetary(string="Subtotal", compute="_compute_total")
     impuestos = fields.Monetary(string="Impuestos", compute="_compute_total")
-    # total_impuestos = fields.Float(
-    #     string="Total de Impuestos", compute="_compute_total"
-    # )
-    # taxes_id = fields.Many2many(
-    #     string="Impuestos",
-    #     comodel_name="account.tax",
-    #     # related="producto.taxes_id",
-    # )
     total = fields.Monetary(string="Total", compute="_compute_total")
+
+    @api.model
+    def create(self, vals):
+        if not vals.get("name"):
+            seq_date = None
+            vals["name"] = (
+                self.env["ir.sequence"].next_by_code(
+                    "sale.order", sequence_date=seq_date
+                )
+                or "/"
+            )
+        return super(ExdooRequest, self).create(vals)
 
     def confirmar_request(self):
         self.state = "confirmado"
+        self.fecha_confirmación = fields.Datetime.now()
 
     def cancelar_request(self):
         self.state = "cancelado"
+
 
 
 class RequestOrderLines(models.Model):
@@ -89,29 +129,27 @@ class RequestOrderLines(models.Model):
     producto = fields.Many2one(string="Producto", comodel_name="product.template")
 
     unidades_medida = fields.Many2one(
-        string="Unidades de medida", comodel_name="uom.uom", related="producto.uom_id"
+        string="Unidades de medida",
+        comodel_name="uom.uom",
+        related="producto.uom_id",
+        store=True,
     )
     cantidad = fields.Float(string="cantidad", default=1.0)
 
-    list_price = fields.Float(
-        string="Precio unitario",
-        # related="producto.list_price"
-    )
+    list_price = fields.Float(string="Precio unitario", related="producto.list_price")
     taxes_id = fields.Many2many(
         string="Impuestos",
         comodel_name="account.tax",
-        # related="producto.taxes_id",
+        related="producto.taxes_id",
     )
-    subtotal = fields.Float(
-        string="Subtotal",
-    )
+    subtotal = fields.Float(string="Subtotal", readonly=True)
 
     total_impuestos = fields.Float(
         string="Total de Impuestos", compute="_compute_total"
     )
 
-    # impuesto_subtotal = fields.Float()
-    total = fields.Float(string="total")
+    # impuesto_subtotal = fields.Float()oup_
+    total = fields.Float(string="total", readonly=True)
 
     ## Funcion lineas de orden con modulo account.tax.taxes_id
     @api.depends("subtotal", "taxes_id", "subtotal")
@@ -119,8 +157,8 @@ class RequestOrderLines(models.Model):
         for record in self:
             # Calcular impuestos (tax_obj = self.env['account.tax'])
             taxes = record.taxes_id.compute_all(
-                record.subtotal,
-                quantity=1.0,
+                price_unit=record.list_price,
+                quantity=record.cantidad,
                 product=record.producto,  # Ajusta si tu modelo tiene un campo product_id
             )
             record.total_impuestos = taxes["total_included"] - taxes["total_excluded"]
@@ -136,12 +174,18 @@ class RequestOrderLines(models.Model):
     #         record.impuesto_subtotal = base * record.subtotal
     #         record.total = record.impuesto_subtotal + record.subtotal
 
+    # Funcion para
     @api.onchange("cantidad", "list_price")
     def _onchange_cantidad(self):
         self.subtotal = self.cantidad * self.list_price
 
     @api.onchange("producto")
     def _onchange_name(self):
-        if self.producto:
-            self.list_price = self.producto.list_price
-            self.taxes_id = self.producto.taxes_id
+        if self.producto and not self.taxes_id:
+            default_tax = self.env["account.tax"].search(
+                [("name", "=", "IVA 0% VENTAS")]
+            )
+            if default_tax:
+                self.taxes_id = [(6, 0, [default_tax.id])]
+        # if self.taxes_id == "":
+        #     default = lambda self : self.env["account.tax"].search([('name', '=', "IVA 0% VENTAS")])

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+acceso_cine_administrador,acceso presupuesto cine,model_cine,group_cine_administrador,1,1,1,1
+acceso_cine_usuario,acceso presupuesto cine,model_cine,group_cine_usuario,1,1,1,1
