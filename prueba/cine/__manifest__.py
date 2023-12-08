@@ -3,15 +3,17 @@
 {
     "name": "modulo de cine",
     "version": "1.0",
-    "depends": ["contacts","peliculas"],
+    "depends": ["contacts", "peliculas"],
     "author": "Daniel Romero",
     "category": "cine",
     "website": "http://www.google.com",
     "summary": "Modulo de salas de cine",
     "description": """Modulos para hacer registros de salas de cine""",
-    "data": ["./views/menu.xml",
-             "./views/cine_view.xml",
-             "./views/view_menu_peliculas_extend.xml"
-                          
-             ]
+    "data": [
+        "security/security_cine.xml",
+        "security/ir.model.access.csv",
+        "./views/menu.xml",
+        "./views/cine_view.xml",
+        "./views/view_menu_peliculas_extend.xml",
+    ],
 }
