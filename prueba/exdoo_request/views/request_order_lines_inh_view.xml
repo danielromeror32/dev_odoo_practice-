@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    
+<record id="view_template_order_lines_form_inherit" model="ir.ui.view">
+    <field name="name">view.template.order.lines.form.inherit</field>
+    <field name="model">exdoo.request</field>
+    <field name="inherit_id" ref="exdoo_request.exdoo_request_view_form" />
+    <field name="arch" type="xml">
+        <field name="discount" position="attributes">
+            <attribute name="readonly">1</attribute>
+            <attribute name="groups">exdoo_request.group_usuario_exdoo</attribute>
+        </field>
+    </field>
+</record>
+
+<record id="view_template_order_lines_form_inherit2" model="ir.ui.view">
+    <field name="name">view.template.order.lines.form.inherit2</field>
+    <field name="model">exdoo.request</field>
+    <field name="inherit_id" ref="exdoo_request.exdoo_request_view_form" />
+    <field name="groups_id" eval="[(6, 0, [ref('exdoo_request.group_administrador_exdoo')])]" />
+    <field name="arch" type="xml">
+        <field name="discount" position="attributes">
+            <attribute name="readonly">0</attribute>
+        </field>
+    </field>
+</record>
+
+
+</odoo>

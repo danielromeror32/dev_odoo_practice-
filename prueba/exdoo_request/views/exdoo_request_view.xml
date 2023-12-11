@@ -25,19 +25,16 @@
                     <group>
                         <group>
                             <field name="name"  readonly="1" invisible="1" attrs="{'readonly':[('state','!=','borrador')]}"></field>
-                            <field name="cliente" required="1" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="cliente" required="1" attrs="{'readonly':[('state','!=','borrador')]}" ></field>
                             <field name="fecha" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="fecha_confirmación" attrs="{'readonly':[('state','!=','borrador')]}"></field>
-                            <!-- <field name="termino_pagos" attrs="{'readonly':[('state','!=','borrador')]}"></field> -->
-                            <!-- <field name="termino_pagos" widget="many2many_tags" groups="exdoo_request.group_exdoo_administrador,exdoo_request.group_exdoo_usuario"
-                                attrs="{'readonly':[('state','!=','borrador'), ('exdoo_request.group_exdoo_usuario', 'in', groups)]}" ></field> -->
-                            <field name="termino_pagos" widget="many2many_tags" 
-                                groups="exdoo_request.group_exdoo_administrador"
-                                attrs="{'readonly': [('state', '!=', 'borrador')]}" />
-                            <field name="termino_pagos" widget="many2many_tags" 
-                                groups="exdoo_request.group_exdoo_usuario"
-                                readonly="1" />
-
+                            <!-- <field name="termino_pagos" groups="exdoo_request.group_usuario_exdoo"
+                             attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
+                             <!-- <field name="termino_pagos" groups="exdoo_request.group_administrador_exdoo"
+                             attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
+                            <field name="termino_pagos" widget="many2many_tags"></field>
+                            <!-- <field name="termino_pagos" widget="many2many_tags" groups="exdoo_request.group_administrador_exdoo,exdoo_request.group_exdoo_usuario"
+                                attrs="{'readonly':[('state','!=','borrador'), ('exdoo_request.group_usuario_exdoo', 'in', groups)]}" ></field> -->
                             <field name="terminos_pagos_id" invisible="1"></field>
                         </group>
                         <group>
@@ -59,7 +56,10 @@
                                     <field name="list_price"></field>
                                     <field name="taxes_id" widget="many2many_tags"></field>
                                     <field name="total_impuestos" invisible="1"></field>
-                                    <!-- <field name="impuesto_subtotal" invisible="0"></field> -->
+                                    <field name="discount"/>
+                                    <!-- <field name="discount" groups="exdoo_request.group_usuario_exdoo" readonly="1"/> -->
+                                    <!-- <field name="discount"></field> -->
+                                    <field name="total_impuestos" invisible="0"></field>
                                     <field name="subtotal" readonly="1" force_save="1"></field>
                                     <field name="total" readonly="1" force_save="1"></field>
                                 </tree>
@@ -105,11 +105,10 @@
         <field name="model">exdoo.request</field>
         <field name="arch" type="xml">
             <search>
-                <!-- Otros campos y etiquetas -->
                 <filter string="Borradores" name="state_draft" domain="[('state', '=', 'borrador')]"/>
                 <filter string="Confirmados" name="state_done" domain="[('state', '=', 'confirmado')]"  context="{'default_state_draft': True}"/>
                 <filter string="Usuario" name="salesperson" domain="[]" context="{'group_by': 'usuario'}"/>
-                <!-- Agrega otros filtros según tus necesidades -->
+                
             </search>
         </field>
     </record>

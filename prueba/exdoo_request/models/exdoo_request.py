@@ -9,7 +9,11 @@ logger = logging.getLogger(__name__)
 class ExdooRequest(models.Model):
     _name = "exdoo.request"
 
-    name = fields.Char(string="Secuencia", readonly=True, copy=False)
+    name = fields.Char(
+        string="Secuencia",
+        readonly=True,
+        copy=False,
+    )
     fecha = fields.Datetime(
         string="Fecha", copy=False, default=lambda self: fields.Datetime.now()
     )
@@ -21,7 +25,6 @@ class ExdooRequest(models.Model):
         "account.payment.term",
         string="Termino de pago",
         domain="[('id', 'in', terminos_pagos_id)]",
-       
     )
 
     terminos_pagos_id = fields.Many2many(
@@ -36,7 +39,13 @@ class ExdooRequest(models.Model):
         terminos_pago = self.cliente.payment_term
         self.terminos_pagos_id = [(6, 0, terminos_pago.ids)]
         self.termino_pagos = self.terminos_pagos_id
-        
+        # try:
+        #     primer_termino_pago = self.terminos_pagos_id[0]
+        # except IndexError:
+        #    
+        #     primer_termino_pago = False
+
+        # self.termino_pagos = primer_termino_pago
 
     usuario = fields.Many2one(
         "res.users", string="Usuario", default=lambda self: self.env.user, required=True
@@ -94,9 +103,11 @@ class ExdooRequest(models.Model):
         required=True,
     )
 
-    base = fields.Monetary(string="Subtotal", compute="_compute_total")
-    impuestos = fields.Monetary(string="Impuestos", compute="_compute_total")
-    total = fields.Monetary(string="Total", compute="_compute_total")
+    base = fields.Monetary(string="Subtotal", compute="_compute_total", store=True)
+    impuestos = fields.Monetary(
+        string="Impuestos", compute="_compute_total", store=True
+    )
+    total = fields.Monetary(string="Total", compute="_compute_total", store=True)
 
     @api.model
     def create(self, vals):
@@ -116,7 +127,6 @@ class ExdooRequest(models.Model):
 
     def cancelar_request(self):
         self.state = "cancelado"
-
 
 
 class RequestOrderLines(models.Model):
@@ -149,20 +159,39 @@ class RequestOrderLines(models.Model):
     )
 
     # impuesto_subtotal = fields.Float()oup_
-    total = fields.Float(string="total", readonly=True)
+    total = fields.Float(string="Total", readonly=True)
+
+    discount = fields.Float(
+        string="Discount (%)",
+        digits="Discount",
+        default=0.0,
+    )
+
+    # Funcion para
+    @api.onchange("cantidad", "list_price", "discount")
+    def _onchange_cantidad(self):
+        self.subtotal = self.cantidad * self.list_price
 
     ## Funcion lineas de orden con modulo account.tax.taxes_id
-    @api.depends("subtotal", "taxes_id", "subtotal")
+    @api.depends(
+        "discount",
+        "subtotal",
+        "taxes_id",
+    )
     def _compute_total(self):
         for record in self:
             # Calcular impuestos (tax_obj = self.env['account.tax'])
             taxes = record.taxes_id.compute_all(
                 price_unit=record.list_price,
                 quantity=record.cantidad,
-                product=record.producto,  # Ajusta si tu modelo tiene un campo product_id
+                product=record.producto, 
             )
-            record.total_impuestos = taxes["total_included"] - taxes["total_excluded"]
-            record.total = taxes["total_included"]
+            discount_factor = 1.0 - record.discount / 100.0
+            record.subtotal = record.subtotal * discount_factor
+            record.total_impuestos = (
+                taxes["total_included"] - taxes["total_excluded"]
+            ) * discount_factor
+            record.total = taxes["total_included"] * discount_factor
 
     ## Función sin usar modulo Odoo
     # @api.depends("taxes_id", "subtotal", "impuesto_subtotal", "total")
@@ -173,11 +202,6 @@ class RequestOrderLines(models.Model):
     #         base = record.total_impuestos / 100
     #         record.impuesto_subtotal = base * record.subtotal
     #         record.total = record.impuesto_subtotal + record.subtotal
-
-    # Funcion para
-    @api.onchange("cantidad", "list_price")
-    def _onchange_cantidad(self):
-        self.subtotal = self.cantidad * self.list_price
 
     @api.onchange("producto")
     def _onchange_name(self):
