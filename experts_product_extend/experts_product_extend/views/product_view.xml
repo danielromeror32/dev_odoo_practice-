@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        
+        <record id="product_template_form_view_procurement_button_inherit" model="ir.ui.view">
+            <field name="name">product.template.form.view.procurement.button.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock.product_template_form_view_procurement_button" />
+            <field name="arch" type="xml">
+                <button name="action_update_quantity_on_hand" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_update_stock_from_product</attribute>
+                </button>
+                <button name="%(stock.action_product_replenish)d" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_request_procurement_from_product</attribute>
+                </button>
+            </field>
+        </record>
+
+        <record id="product_product_view_form_easy_inherit_stock_groups_buttons" model="ir.ui.view">
+            <field name="name">product.product.view.form.easy.inherit.stock.groups.buttons</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.product_product_view_form_easy_inherit_stock"/>
+            <field name="arch" type="xml">
+                 <button name="action_update_quantity_on_hand" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_update_stock_from_product</attribute>
+                </button>
+                <button name="%(stock.action_product_replenish)d" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_request_procurement_from_product</attribute>
+                </button>
+            </field>
+        </record>
+
+        <record id="view_template_property_form_inh" model="ir.ui.view">
+            <field name="name">view_template_property_form_inh</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock.view_template_property_form" />
+            <field name="arch" type="xml">
+                    <xpath expr="//group[@name='operations']" position="inside">
+                        <label for="sale_guarantee" attrs="{'invisible': [('sale_ok', '=', False)]}"/>
+                        <div attrs="{'invisible': [('sale_ok', '=', False)]}">
+                            <field name="sale_guarantee" class="oe_inline" style="vertical-align:baseline"/> meses
+                        </div>
+                    </xpath>
+                    <xpath expr="//group[@name='stock_property']" position="after">
+                        <group string="Ubicación de almacenamiento" name="stock_group">    
+                            <field name="shelf"/>
+                            <field name="row"/>
+                            <field name="box"/>
+                        </group>
+                    </xpath>
+            </field>
+        </record>
+
+        <record id="view_stock_product_template_tree_inherit" model="ir.ui.view">
+            <field name="name">product template tree view: add group to stock value</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="stock.view_stock_product_template_tree" />
+            <field name="arch" type="xml">       
+                <field name="qty_available" position="after">
+                    <field name="stock_value" groups="experts_product_extend.group_view_standard_price" sum="Total" />
+                    <field name="qty_available_not_res"/>
+                </field>
+                <field name="virtual_available" position="after">
+                    <field name="incoming_qty" string="En camino"/>
+                </field>
+                <field name="virtual_available" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_stock_product_tree_inherit_stock_value" model="ir.ui.view">
+            <field name="name">product variant tree view: add group to stock value</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.view_stock_product_tree" />
+            <field name="arch" type="xml">       
+                <field name="qty_available" position="after">
+                    <field name="stock_value_varian" groups="experts_product_extend.group_view_standard_price" sum="Total" />
+                </field>
+            </field>
+        </record>
+        
+        <record id="view_template_property_form_inherit" model="ir.ui.view">
+            <field name="name">view.template.property.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view" />
+            <field name="arch" type="xml">
+                <label for="standard_price" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_view_standard_price</attribute>
+                </label>
+                <field name="standard_price" position="attributes">
+                    <attribute name="groups">experts_product_extend.group_view_standard_price</attribute>
+                </field>
+                <field name="list_price" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_template_property_form_inherit2" model="ir.ui.view">
+            <field name="name">view.template.property.form.inherit2</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view" />
+            <field name="groups_id" eval="[(6, 0,[ref('experts_product_extend.group_edit_price_list')])]" />
+            <field name="arch" type="xml">
+                <field name="list_price" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="product_template_only_form_view_readonly_default_code">
+            <field name="name">product.normal.form.view.readonly.default.code</field>
+            <field name="model">product.template</field>
+            <field name="priority">3</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view" />
+            <field name="arch" type="xml">
+                <field name="default_code" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="product_normal_form_view_edif_default_code_inh">
+            <field name="name">product.normal.form.view.edif.default.code.inh</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="groups_id" eval="[(6, 0,[ref('experts_product_extend.group_view_internal_reference')])]" />
+            <field name="arch" type="xml">
+                <field name="default_code" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="product_normal_form_view_default_code_ro_inh">
+            <field name="name">product.normal.form.view.default.code.ro.inh</field>
+            <field name="model">product.product</field>
+            <field name="priority">3</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="arch" type="xml">
+                <field name="default_code" position="attributes">
+                    <attribute name="readonly">1</attribute>
+                </field>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="product_template_only_form_view_edit_default_code">
+            <field name="name">product.normal.form.view.edit.default.code</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view" />
+            <field name="groups_id" eval="[(6, 0,[ref('experts_product_extend.group_view_internal_reference')])]" />
+            <field name="arch" type="xml">
+                <field name="default_code" position="attributes">
+                    <attribute name="readonly">0</attribute>
+                </field>
+            </field>
+        </record>
+
+        <!-- Categoria -->
+       <record id="product_category_form_view_inherit" model="ir.ui.view">
+            <field name="name">product.category.form.view.inherit</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view" />
+            <field name="arch" type="xml">
+                <group name="first" position="after">
+                    <group name="reference" string="Referencia">
+                        <field name="ref" placeholder="Referencia"/>
+                    </group>
+                </group>
+            </field>
+        </record>
+
+        
+
+    </data>
+</odoo>
+
+        

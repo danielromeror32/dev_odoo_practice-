@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <record model="res.groups" id="group_margin_extend">
+            <field name="name">Ver margen de venta</field>
+            <field name="category_id"  ref="experts_groups.module_category_experts_sales"/>
+        </record>
+        <record model="res.groups" id="group_margin_invoice">
+            <field name="name">Ver margen en factura</field>
+            <field name="category_id"  ref="experts_groups.module_category_experts_sales"/>
+        </record>
+    </data>
+</odoo>

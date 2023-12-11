@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <record model="res.groups" id="group_view_internal_reference">
+            <field name="name">Editar referencia interna</field>
+            <field name="category_id" ref="experts_groups.module_category_experts_product"/>
+        </record>
+        <record model="res.groups" id="group_view_standard_price">
+            <field name="name">Ver costo de productos</field>
+            <field name="category_id" ref="experts_groups.module_category_experts_product"/>
+        </record>
+        <record model="res.groups" id="group_edit_price_list">
+            <field name="name">Editar precios de lista de productos</field>
+            <field name="category_id" ref="experts_groups.module_category_experts_product"/>
+        </record>
+        <record model="res.groups" id="group_update_stock_from_product">
+            <field name="name">Actualizar existencias desde el producto</field>
+            <field name="category_id" ref="experts_groups.module_category_experts_product"/>
+        </record>
+        <record model="res.groups" id="group_request_procurement_from_product">
+            <field name="name">Solicitar abastecimientos desde el producto</field>
+            <field name="category_id" ref="experts_groups.module_category_experts_product"/>
+        </record>       
+    </data>
+</odoo>
