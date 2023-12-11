@@ -12,6 +12,18 @@ class PresupuestoExtend(models.Model):
     payment_term = fields.Many2many(
         string="Términos de pago permitidos",
         comodel_name="account.payment.term",
-        # groups="exdoo_request.group_administrador_exdoo",
-        # groups="exdoo_request.group_exdoo_administrador,exdoo_request.group_exdoo_usuario",
+    )
+
+    @api.onchange("payment_term", "property_payment_term_id")
+    def _onchange_cantidad(self):
+        return {
+            "domain": {
+                "property_payment_term_id": [("id", "in", self.payment_term.ids)]
+            }
+        }
+
+    payment_term_test = fields.Many2one(
+        "account.payment.term",
+        string="Termino de pago prueba",
+        domain="[('id', 'in', payment_term)]",
     )

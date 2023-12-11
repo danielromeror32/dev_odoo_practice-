@@ -32,7 +32,7 @@
                              attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
                              <!-- <field name="termino_pagos" groups="exdoo_request.group_administrador_exdoo"
                              attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
-                            <field name="termino_pagos" widget="many2many_tags"></field>
+                            <field name="termino_pagos" ></field>
                             <!-- <field name="termino_pagos" widget="many2many_tags" groups="exdoo_request.group_administrador_exdoo,exdoo_request.group_exdoo_usuario"
                                 attrs="{'readonly':[('state','!=','borrador'), ('exdoo_request.group_usuario_exdoo', 'in', groups)]}" ></field> -->
                             <field name="terminos_pagos_id" invisible="1"></field>

@@ -21,11 +21,14 @@ class ExdooRequest(models.Model):
 
     cliente = fields.Many2one(string="Cliente", comodel_name="res.partner")
 
-    termino_pagos = fields.Many2many(
+    termino_pagos = fields.Many2one(
         "account.payment.term",
         string="Termino de pago",
         domain="[('id', 'in', terminos_pagos_id)]",
     )
+
+    
+
 
     terminos_pagos_id = fields.Many2many(
         "account.payment.term",
@@ -36,13 +39,13 @@ class ExdooRequest(models.Model):
     @api.depends("cliente")
     def _compute_terminos_pago_id(self):
         self.termino_pagos = False
-        terminos_pago = self.cliente.payment_term
+        terminos_pago = self.cliente.property_payment_term_id
         self.terminos_pagos_id = [(6, 0, terminos_pago.ids)]
         self.termino_pagos = self.terminos_pagos_id
         # try:
         #     primer_termino_pago = self.terminos_pagos_id[0]
         # except IndexError:
-        #    
+        #
         #     primer_termino_pago = False
 
         # self.termino_pagos = primer_termino_pago
@@ -184,7 +187,7 @@ class RequestOrderLines(models.Model):
             taxes = record.taxes_id.compute_all(
                 price_unit=record.list_price,
                 quantity=record.cantidad,
-                product=record.producto, 
+                product=record.producto,
             )
             discount_factor = 1.0 - record.discount / 100.0
             record.subtotal = record.subtotal * discount_factor
