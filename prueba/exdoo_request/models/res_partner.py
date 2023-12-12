@@ -21,7 +21,7 @@ class PresupuestoExtend(models.Model):
                 "property_payment_term_id": [("id", "in", self.payment_term.ids)]
             }
         }
-
+    # Nuevo campo para incluir un campo con relación a terminos de pago
     payment_term_test = fields.Many2one(
         "account.payment.term",
         string="Termino de pago prueba",

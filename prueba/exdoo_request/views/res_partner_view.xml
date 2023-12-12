@@ -34,10 +34,10 @@
             <attribute name="readonly">1</attribute>
             <attribute name="groups">exdoo_request.group_usuario_exdoo</attribute>
         </field>
-        <field name="property_payment_term_id" position="attributes">
+        <!-- <field name="property_payment_term_id" position="attributes">
             <attribute name="readonly">1</attribute>
             <attribute name="groups">exdoo_request.group_usuario_exdoo</attribute>
-        </field>
+        </field> -->
     </field>
 </record>
 
@@ -50,9 +50,9 @@
         <field name="payment_term" position="attributes">
             <attribute name="readonly">0</attribute>
         </field>
-        <field name="property_payment_term_id" position="attributes">
+        <!-- <field name="property_payment_term_id" position="attributes">
             <attribute name="readonly">0</attribute>
-        </field>
+        </field> -->
     </field>
 </record>
 

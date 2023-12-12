@@ -46,11 +46,11 @@
                         </group>    
                     </group>
                     <notebook>
-                        <page string="linea de orden" >
+                        <page string="linea de orden">
                             <field name="orderLines_ids" required="1" attrs="{'readonly':[('state','!=','borrador')]}">
                                 <tree editable="bottom">
                                     <control><create name="add_product_control" string="Agregar producto"></create></control>
-                                    <field name="producto" required="1" ></field>
+                                    <field name="producto" ></field>
                                     <field name="cantidad"></field>
                                     <field name="unidades_medida"></field>
                                     <field name="list_price"></field>
