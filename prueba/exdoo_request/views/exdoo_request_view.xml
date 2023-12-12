@@ -10,6 +10,8 @@
                 <header>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
+                    <button string="Comprobar disponibilidad" type="object" name="confirmar_stock" states="confirmado" class="oe_highlight"></button>
+                    <!-- <button string="Validar soliciud" type="object" name="qty_available_warehouse" states="confirmado"></button> -->
                     <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
                 </header>
              
@@ -28,21 +30,17 @@
                             <field name="cliente" required="1" attrs="{'readonly':[('state','!=','borrador')]}" ></field>
                             <field name="fecha" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="fecha_confirmación" attrs="{'readonly':[('state','!=','borrador')]}"></field>
-                            <!-- <field name="termino_pagos" groups="exdoo_request.group_usuario_exdoo"
-                             attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
-                             <!-- <field name="termino_pagos" groups="exdoo_request.group_administrador_exdoo"
-                             attrs="{'readonly':[('state','!=','borrador')]}" widget="many2many_tags"></field> -->
                             <field name="termino_pagos" ></field>
-                            <!-- <field name="termino_pagos" widget="many2many_tags" groups="exdoo_request.group_administrador_exdoo,exdoo_request.group_exdoo_usuario"
-                                attrs="{'readonly':[('state','!=','borrador'), ('exdoo_request.group_usuario_exdoo', 'in', groups)]}" ></field> -->
                             <field name="terminos_pagos_id" invisible="1"></field>
                         </group>
                         <group>
                             
                             <field name="usuario" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="company" ></field>
-                            <!-- <field name="ticket_price" widget="monetary" invisible="1"></field> -->
                             <field name="currency_id" attrs="{'readonly':[('state','!=','borrador')]}"></field>
+                            <field name="almacen"></field>
+                            <field name="variantes_productos"></field>
+                            <field name="qty_available_temp"></field>
                         </group>    
                     </group>
                     <notebook>

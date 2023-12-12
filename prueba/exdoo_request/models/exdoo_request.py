@@ -66,6 +66,75 @@ class ExdooRequest(models.Model):
         default=lambda self: self.env.company.currency_id.id,
     )
 
+    almacen = fields.Many2one(
+        comodel_name="stock.warehouse",
+        string="Almacén",
+    )
+
+    variantes_productos = fields.Many2one(
+        comodel_name="product.product", string="variantes_productos"
+    )
+
+    qty_available_temp = fields.Float(string="Cantidad a la mano")
+    # qty_available_list = []
+    qty_available_dict = {}
+
+    @api.depends("variantes_productos.qty_available")
+    def qty_available_warehouse(self):
+        for record in self:
+            for line in record.orderLines_ids:
+                warehouse_id = record.almacen.id
+                qty_available = line.producto.with_context(
+                    warehouse=warehouse_id
+                ).qty_available
+                record.qty_available_list.append(qty_available)
+                record.qty_available_dict[line.producto.id] = qty_available
+            record.qty_available_temp = qty_available
+        # logger.info(f"****** Se acciono la función qty_available_warehouse {self.qty_available_dict}********")  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+
+    def confirmar_stock(self):
+        self.qty_available_warehouse()
+        for line in self.orderLines_ids:
+            requested_amount = line.cantidad
+            requested_product = line.producto.id
+            if requested_product in self.qty_available_dict:
+                validacion = (
+                    self.qty_available_dict[requested_product] - requested_amount
+                )
+                if validacion > 0:
+                    logger.info(f"******valor de validación {validacion} ********")
+                    self.transferir_a_ventas()
+                else:
+                    logger.info(
+                        f"******FALTA valor de validación {validacion} ********"
+                    )
+
+    """
+    cantidad 
+    producto
+
+    en el diccionario esta el id del producto y la cantidad de stock {43: 0.0, 45: 20.0}
+
+    mismo producto y cantidad solicitada 
+    """
+
+    def transferir_a_ventas(self):
+        
+        datos_a_transferir = {
+            "partner_id": self.cliente,
+            # 'payment_term_id': self.termino_pagos,
+            "company_id": self.company
+            # ... otros campos del modelo de ventas ...
+        }
+        ventas_modelo = self.env["sale.order"]
+        nuevo_registro_ventas = ventas_modelo.create(datos_a_transferir)
+        logger.info(f"****** HECHO ********")
+
+    def confirmar_request(self):
+        self.state = "confirmado"
+        self.fecha_confirmación = fields.Datetime.now()
+        # self.qty_available_warehouse()
+
     state = fields.Selection(
         selection=[
             ("borrador", "Borrador"),
@@ -76,6 +145,8 @@ class ExdooRequest(models.Model):
         string="Estado",
         copy=False,
     )
+
+
     producto = fields.Many2one(string="Producto", comodel_name="product.template")
 
     ## Funcion lineas de orden relacionado con modulo account.tax.taxes_id
@@ -120,10 +191,6 @@ class ExdooRequest(models.Model):
                 or "/"
             )
         return super(ExdooRequest, self).create(vals)
-
-    def confirmar_request(self):
-        self.state = "confirmado"
-        self.fecha_confirmación = fields.Datetime.now()
 
     def cancelar_request(self):
         self.state = "cancelado"

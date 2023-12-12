@@ -8,18 +8,12 @@
             <field name="arch" type="xml">
             
             <field name="vat" position="after">
-                <!-- <field name="payment_term" widget="many2many_tags"  group="exdoo_request.group_usuario_exdoo"></field> -->
                 <field name="payment_term" widget="many2many_tags"></field>
                 <field name="payment_term_test" invisible="1"></field>
-                <!-- <field name="allowed_payment_terms"></field> -->
-                <!-- <field name="payment_term" widget="many2many_tags" groups="exdoo_request.group_administrador_exdoo" readonly="1" ></field> -->
-                
             </field>
             <field name="property_payment_term_id" position="attributes">
                 <attribute name="domain">[('id', 'in', payment_term)]</attribute>
-            </field>
-            
-            
+            </field>   
             </field>
         </record>
    </data>
