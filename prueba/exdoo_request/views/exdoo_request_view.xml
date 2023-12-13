@@ -10,7 +10,7 @@
                 <header>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
-                    <button string="Comprobar disponibilidad" type="object" name="confirmar_stock" states="confirmado" class="oe_highlight"></button>
+                    <button string="Validar solicitud" type="object" name="qty_available_warehouse" states="confirmado" class="oe_highlight"></button>
                     <!-- <button string="Validar soliciud" type="object" name="qty_available_warehouse" states="confirmado"></button> -->
                     <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
                 </header>
@@ -38,7 +38,8 @@
                             <field name="usuario" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="company" ></field>
                             <field name="currency_id" attrs="{'readonly':[('state','!=','borrador')]}"></field>
-                            <field name="almacen"></field>
+                            <field name="lista_precios" required="1"></field>
+                            <field name="almacen" required="1"></field>
                             <field name="variantes_productos"></field>
                             <field name="qty_available_temp"></field>
                         </group>    

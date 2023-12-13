@@ -66,6 +66,12 @@ class ExdooRequest(models.Model):
         default=lambda self: self.env.company.currency_id.id,
     )
 
+    lista_precios = fields.Many2one(
+        comodel_name="product.pricelist",
+        string="Lista de precios",
+        required=True,
+    )
+
     almacen = fields.Many2one(
         comodel_name="stock.warehouse",
         string="Almacén",
@@ -77,58 +83,99 @@ class ExdooRequest(models.Model):
 
     qty_available_temp = fields.Float(string="Cantidad a la mano")
     # qty_available_list = []
-    qty_available_dict = {}
+    # qty_available_dict = {}
 
+    ## Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
+    # @api.depends("variantes_productos.qty_available")
     @api.depends("variantes_productos.qty_available")
     def qty_available_warehouse(self):
-        for record in self:
-            for line in record.orderLines_ids:
-                warehouse_id = record.almacen.id
-                qty_available = line.producto.with_context(
-                    warehouse=warehouse_id
-                ).qty_available
-                record.qty_available_list.append(qty_available)
-                record.qty_available_dict[line.producto.id] = qty_available
-            record.qty_available_temp = qty_available
-        # logger.info(f"****** Se acciono la función qty_available_warehouse {self.qty_available_dict}********")  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
-
-    def confirmar_stock(self):
-        self.qty_available_warehouse()
+        qty_available_dict = {}
+        # logger.info(f"****** CONTADOR ********")
+        warehouse_id = self.almacen.id
         for line in self.orderLines_ids:
-            requested_amount = line.cantidad
-            requested_product = line.producto.id
-            if requested_product in self.qty_available_dict:
-                validacion = (
-                    self.qty_available_dict[requested_product] - requested_amount
-                )
-                if validacion > 0:
-                    logger.info(f"******valor de validación {validacion} ********")
-                    self.transferir_a_ventas()
-                else:
-                    logger.info(
-                        f"******FALTA valor de validación {validacion} ********"
-                    )
+            # logger.info(f"****** CONTADOR ********")  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+            cantidad_producto = line.cantidad
+            qty_available_cantidad = line.producto.with_context(
+                warehouse=warehouse_id
+            ).qty_available
+            # record.qty_available_list.append(qty_available)
+            qty_available_dict[line.producto.id] = (
+                qty_available_cantidad,
+                cantidad_producto,
+            )  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
+        self.qty_available_temp = qty_available_cantidad  # prueba
+        logger.info(
+            f"****** Se acciono la función qty_available_warehouse {qty_available_dict}********"
+        )  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+        self.confirmar_stock(qty_available_dict)
 
-    """
-    cantidad 
-    producto
+    def confirmar_stock(self, qty_available_dict):
+        validacion = 0
+        verificacion = True
+        order_lines = []
+        order_lines_compra = []
+        # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+        for producto, cantidad in qty_available_dict.items():
+            validacion = cantidad[0] - cantidad[1]
+            id_producto = producto
+            logger.info(
+                f"****** Resultado de la resta para '{id_producto}': {validacion}********"
+            )  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
 
-    en el diccionario esta el id del producto y la cantidad de stock {43: 0.0, 45: 20.0}
+            if validacion > 0:
+                verificacion = True
+                # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+                datos_producto = self.productos_order_lines(id_producto)
+                order_lines.append(
+                    (0, 0, datos_producto)
+                )  # indica la creación de un nuevo registro relacionado
+            else:
+                verificacion = False
+                datos_producto = self.productos_order_lines(id_producto)
+                order_lines_compra.append((0, 0, datos_producto))
+                logger.info(f"******ERROR valor de validación {validacion} ********")
+            if verificacion is True:
+                logger.info(f"******DATOS DE ORDER LINES {order_lines} ********")
+                self.transferir_a_ventas(order_lines)
 
-    mismo producto y cantidad solicitada 
-    """
+    def productos_order_lines(self, producto_id):
+        order_line_vals = {}
+        # logger.info(f"******valor de producto {producto_id} ********")
 
-    def transferir_a_ventas(self):
-        
+        for line in self.orderLines_ids:  # orderLines_ids = No reistros/productos
+            logger.info(f"******valor de producto {producto_id} ********")
+
+            # Verifica si el producto_id coincide con el producto de la línea actual
+            if line.producto.id == producto_id:
+                order_line_vals = {
+                    "product_id": line.producto.id,
+                    "product_uom_qty": line.cantidad,
+                    "product_uom": line.unidades_medida.id,
+                    "price_unit": line.list_price,
+                    "tax_id": line.taxes_id,  # [(6, 0, line.taxes_id.ids)],
+                    "discount": line.discount,
+                    "price_subtotal": line.subtotal,
+                }
+                return order_line_vals
+                # order_lines.append((0, 0, order_line_vals))
+
+    def transferir_a_ventas(self, order_lines):
         datos_a_transferir = {
-            "partner_id": self.cliente,
+            "partner_id": self.cliente.id,
+            "pricelist_id": self.lista_precios.id,
+            "date_order": self.fecha,
+            "payment_term_id": self.termino_pagos.id,
+            "user_id": self.usuario.id,
+            "company_id": self.company.id,
+            "warehouse_id": self.almacen.id,
+            "order_line": order_lines
             # 'payment_term_id': self.termino_pagos,
-            "company_id": self.company
+            # "company_id": self.company
             # ... otros campos del modelo de ventas ...
         }
         ventas_modelo = self.env["sale.order"]
-        nuevo_registro_ventas = ventas_modelo.create(datos_a_transferir)
-        logger.info(f"****** HECHO ********")
+        ventas_modelo.create(datos_a_transferir)
+        # logger.info(f"****** HECHO ********")
 
     def confirmar_request(self):
         self.state = "confirmado"
@@ -146,8 +193,7 @@ class ExdooRequest(models.Model):
         copy=False,
     )
 
-
-    producto = fields.Many2one(string="Producto", comodel_name="product.template")
+    producto = fields.Many2one(string="Producto", comodel_name="product.product")
 
     ## Funcion lineas de orden relacionado con modulo account.tax.taxes_id
     @api.depends("orderLines_ids")
@@ -203,7 +249,7 @@ class RequestOrderLines(models.Model):
         comodel_name="exdoo.request", string="id exdoo request"
     )
 
-    producto = fields.Many2one(string="Producto", comodel_name="product.template")
+    producto = fields.Many2one(string="Producto", comodel_name="product.product")
 
     unidades_medida = fields.Many2one(
         string="Unidades de medida",
