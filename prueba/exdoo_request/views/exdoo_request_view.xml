@@ -8,14 +8,30 @@
             
             <form>
                 <header>
+                    <field name="registro_generado" invisible="1"></field>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
-                    <button string="Validar solicitud" type="object" name="qty_available_warehouse" states="confirmado" class="oe_highlight"></button>
-                    <!-- <button string="Validar soliciud" type="object" name="qty_available_warehouse" states="confirmado"></button> -->
+                    <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" states="confirmado"></button>                   
                     <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
                 </header>
+                
              
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- <button class="oe_stat_button" icon="fa-globe icon">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Customer</span>
+                                <span class="o_stat_text">Preview</span>
+                            </div>
+                        </button> -->
+                        <!-- attrs="{'invisible': [('invoice_count', '=', 0)]}" -->
+                        <button  name="action_view_sale" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('ventas_count', '=', 0)]}">
+                            <field name="ventas_count" widget="statinfo" string="Ventas" />
+                        </button>
+                        <button  name="action_view_purchase" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('purchase_count', '=', 0)]}">
+                            <field name="purchase_count" widget="statinfo" string="Compras" />
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <div class="o_row">
                             <h1 style="display: flex;">
@@ -32,6 +48,7 @@
                             <field name="fecha_confirmación" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="termino_pagos" ></field>
                             <field name="terminos_pagos_id" invisible="1"></field>
+                            <field name="sale_order_id" widget="many2many_tags"></field>
                         </group>
                         <group>
                             
@@ -40,7 +57,7 @@
                             <field name="currency_id" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="lista_precios" required="1"></field>
                             <field name="almacen" required="1"></field>
-                            <field name="variantes_productos"></field>
+                            <field name="variantes_productos" invisible="1"></field>
                             <field name="qty_available_temp"></field>
                         </group>    
                     </group>
