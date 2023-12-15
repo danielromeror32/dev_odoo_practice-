@@ -78,30 +78,25 @@ class ExdooRequest(models.Model):
     # Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
     @api.depends("variantes_productos.qty_available")
     def qty_available_warehouse(self):
-        # relacion ventas con solicitud
-        # Generar solicitud
         self.state_validado = "validado"
-        # self.state_validado = "no_validado"
         if not self.registro_generado and self.orderLines_ids:
-            # self.state_validado = "validado"
             qty_available_dict = {}
-            # logger.info(f"****** CONTADOR ********")
             warehouse_id = self.almacen.id
             for line in self.orderLines_ids:
-                # logger.info(f"****** CONTADOR ********")  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
                 cantidad_producto = line.cantidad
                 qty_available_cantidad = line.producto.with_context(
                     warehouse=warehouse_id
-                ).qty_available
-                # record.qty_available_list.append(qty_available)
+                ).qty_available  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
                 qty_available_dict[line.producto.id] = (
                     qty_available_cantidad,
                     cantidad_producto,
-                )  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
-            self.qty_available_temp = qty_available_cantidad  # prueba
+                )
+            self.qty_available_temp = (
+                qty_available_cantidad  # campo prueba nuemro de stock
+            )
             logger.info(
-                f"****** Se acciono la función qty_available_warehouse {qty_available_dict}********"
-            )  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
+                f"****** Función qty_available_warehouse {qty_available_dict}********"
+            )
             self.confirmar_stock(qty_available_dict)
 
     producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
@@ -110,26 +105,18 @@ class ExdooRequest(models.Model):
     def confirmar_stock(self, qty_available_dict):
         verificacion = True
         order_lines = []
-        # order_lines_compra = []
         # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
         for producto, cantidad in qty_available_dict.items():
             id_producto = producto
             self.producto_compra = id_producto
             cantidad_disponible = cantidad[0] - cantidad[1]
-            logger.info(
-                f"****** Resultado de la resta para '{id_producto}': {cantidad_disponible}********"
-            )
             provedores = self.producto_compra.seller_ids
-
-            # datos_producto = self.get_order_line(id_producto)
-
             if cantidad_disponible > 0:
                 datos_producto = self.get_order_line(id_producto, "tax_id")
                 order_lines.append((0, 0, datos_producto))
             elif cantidad_disponible <= 0 and provedores:
                 datos_producto = self.get_order_line(id_producto, "taxes_id")
                 verificacion = False
-                # order_lines_compra = ((0, 0, datos_producto))
                 order_lines_compra = [(0, 0, datos_producto)]
                 self.state_validado = "new_valido"
                 for provedor in provedores:
@@ -139,31 +126,19 @@ class ExdooRequest(models.Model):
                 raise UserError(
                     f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
                 )
-
         if verificacion is True:
             self.generar_venta(order_lines)
-        logger.info(f"******DATOS  {self.producto_compra} ********")
-        # else:
-        #     self.state_validado = "new_valido"  # Seguir validando
-        #     for provedor in provedores:
-        #         # logger.info(f"******DATOS Provedores {provedor.name} ********")
-        #         self.generar_compra(order_lines_compra, provedor.name)
-        #         break
 
     def get_order_line(self, producto_id, tax):
         order_line_vals = {}
         for line in self.orderLines_ids:  # orderLines_ids = No.reistros/productos
-            # logger.info(f"****** Valor de producto {producto_id} ********")
-            if (
-                line.producto.id == producto_id
-            ):  # Verifica si el producto_id coincide con el producto de la línea actual
+            if line.producto.id == producto_id:
                 order_line_vals = {
                     "product_id": line.producto.id,
                     "product_uom_qty": line.cantidad,
                     "product_uom": line.unidades_medida.id,
                     "price_unit": line.list_price,
                     tax: line.taxes_id,  # [(6, 0, line.taxes_id.ids)],
-                    # "discount": line.discount,
                     "price_subtotal": line.subtotal,
                 }
                 return order_line_vals
@@ -197,6 +172,7 @@ class ExdooRequest(models.Model):
         self.ventas_count = len(self.sale_order_id)
         logger.info(f"****** Cotizacion de venta generada ********")
 
+    # Entrar a nuevo registro de venta
     def action_view_sale(self):
         return {
             "res_model": "sale.order",
@@ -212,9 +188,7 @@ class ExdooRequest(models.Model):
         help="purchase Order related to this request",
     )
 
-    purchase_count = fields.Integer(
-        copy=False, default=0, store=True
-    )  
+    purchase_count = fields.Integer(copy=False, default=0, store=True)
 
     def generar_compra(self, order_lines, provedor):
         datos_a_transferir = {
@@ -234,6 +208,7 @@ class ExdooRequest(models.Model):
         self.purchase_count = len(self.purchase_order_id)
         logger.info(f"****** Cotizacion de compra generada ********")
 
+    # Entrar a nuevo registro de Compra
     def action_view_purchase(self):
         return {
             "res_model": "purchase.order",
@@ -246,7 +221,6 @@ class ExdooRequest(models.Model):
     def confirmar_request(self):
         self.state = "confirmado"
         self.fecha_confirmación = fields.Datetime.now()
-        # self.qty_available_warehouse()
 
     state = fields.Selection(
         selection=[
@@ -275,16 +249,11 @@ class ExdooRequest(models.Model):
     @api.depends("orderLines_ids")
     def _compute_total(self):
         for record in self:
-            # sub_total = sum(line.subtotal for line in record.orderLines_ids)
             sub_total = 0
             impuestos = 0
             for line in record.orderLines_ids:
                 sub_total += line.subtotal
                 impuestos += line.total_impuestos
-            # taxes = record.taxes_id.compute_all(
-            #     price_unit=sub_total,
-            #     quantity=1.0,)
-            # record.total_impuestos = taxes["total_included"] - taxes["total_excluded"]
             record.base = sub_total
             record.impuestos = impuestos
             record.total = sub_total + impuestos
@@ -381,16 +350,6 @@ class RequestOrderLines(models.Model):
             ) * discount_factor
             record.total = taxes["total_included"] * discount_factor
 
-    ## Función sin usar modulo Odoo
-    # @api.depends("taxes_id", "subtotal", "impuesto_subtotal", "total")
-    # def _compute_total(self):
-    #     for record in self:
-    #         total_impuestos = sum(impuesto.amount for impuesto in record.taxes_id)
-    #         record.total_impuestos = total_impuestos
-    #         base = record.total_impuestos / 100
-    #         record.impuesto_subtotal = base * record.subtotal
-    #         record.total = record.impuesto_subtotal + record.subtotal
-
     @api.onchange("producto")
     def _onchange_name(self):
         if self.producto and not self.taxes_id:
@@ -399,5 +358,4 @@ class RequestOrderLines(models.Model):
             )
             if default_tax:
                 self.taxes_id = [(6, 0, [default_tax.id])]
-        # if self.taxes_id == "":
-        #     default = lambda self : self.env["account.tax"].search([('name', '=', "IVA 0% VENTAS")])
+  
