@@ -8,23 +8,17 @@
             
             <form>
                 <header>
+                    <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
+                    <field name="state_validado" invisible="1"></field>
                     <field name="registro_generado" invisible="1"></field>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
-                    <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" states="confirmado"></button>                   
-                    <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
+                    <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" attrs="{'invisible': ['|',('state', '!=', 'confirmado'),('state_validado', '==','validado')]}"></button>                   
                 </header>
                 
              
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <!-- <button class="oe_stat_button" icon="fa-globe icon">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_text">Customer</span>
-                                <span class="o_stat_text">Preview</span>
-                            </div>
-                        </button> -->
-                        <!-- attrs="{'invisible': [('invoice_count', '=', 0)]}" -->
+                    <div class="oe_button_box" name="button_box">   
                         <button  name="action_view_sale" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('ventas_count', '=', 0)]}">
                             <field name="ventas_count" widget="statinfo" string="Ventas" />
                         </button>
@@ -63,7 +57,7 @@
                     </group>
                     <notebook>
                         <page string="linea de orden">
-                            <field name="orderLines_ids" required="1" attrs="{'readonly':[('state','!=','borrador')]}">
+                            <field name="orderLines_ids" required="1" attrs="{'readonly':[('state','!=','borrador'),('state_validado', '!=','validado'),('state_validado', '!=','new_valido')]}">
                                 <tree editable="bottom">
                                     <control><create name="add_product_control" string="Agregar producto"></create></control>
                                     <field name="producto" ></field>

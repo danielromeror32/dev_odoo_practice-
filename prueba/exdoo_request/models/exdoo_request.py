@@ -39,13 +39,6 @@ class ExdooRequest(models.Model):
         terminos_pago = self.cliente.payment_term
         self.terminos_pagos_id = [(6, 0, terminos_pago.ids)]
         self.termino_pagos = self.cliente.property_payment_term_id
-        # try:
-        #     primer_termino_pago = self.terminos_pagos_id[0]
-        # except IndexError:
-        #
-        #     primer_termino_pago = False
-
-        # self.termino_pagos = primer_termino_pago
 
     usuario = fields.Many2one(
         "res.users", string="Usuario", default=lambda self: self.env.user, required=True
@@ -56,10 +49,7 @@ class ExdooRequest(models.Model):
         default=lambda self: self.env.company,
         required=True,
     )
-    # Company = fields.Many2one("res.company", string="Compañía",
-    #                           default = lambda self : self.env["res.company"])
 
-    # ticket_price = fields.Monetary()
     currency_id = fields.Many2one(
         comodel_name="res.currency",
         string="Moneda",
@@ -85,14 +75,15 @@ class ExdooRequest(models.Model):
 
     registro_generado = fields.Char(string="Nombre del registro")
 
-    ## Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
-    # @api.depends("variantes_productos.qty_available")
-    @api.depends("variantes_productos.qty_available", "orderLines_ids")
+    # Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
+    @api.depends("variantes_productos.qty_available")
     def qty_available_warehouse(self):
-        # relacion ventas con solicitud 
-        # Generar solicitud 
-        # 
+        # relacion ventas con solicitud
+        # Generar solicitud
+        self.state_validado = "validado"
+        # self.state_validado = "no_validado"
         if not self.registro_generado and self.orderLines_ids:
+            # self.state_validado = "validado"
             qty_available_dict = {}
             # logger.info(f"****** CONTADOR ********")
             warehouse_id = self.almacen.id
@@ -113,36 +104,53 @@ class ExdooRequest(models.Model):
             )  # {'Monitores': 0.0, 'Teclados': 20.0} or {43: 0.0, 45: 20.0}********
             self.confirmar_stock(qty_available_dict)
 
+    producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
+    provedores = fields.Many2many(comodel_name="res.partner")
+
     def confirmar_stock(self, qty_available_dict):
-        cantidad_disponible = 0
         verificacion = True
         order_lines = []
-        order_lines_compra = []
+        # order_lines_compra = []
         # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
         for producto, cantidad in qty_available_dict.items():
             id_producto = producto
+            self.producto_compra = id_producto
             cantidad_disponible = cantidad[0] - cantidad[1]
             logger.info(
                 f"****** Resultado de la resta para '{id_producto}': {cantidad_disponible}********"
             )
-            datos_producto = self.get_order_line(id_producto)
+            provedores = self.producto_compra.seller_ids
+
+            # datos_producto = self.get_order_line(id_producto)
+
             if cantidad_disponible > 0:
+                datos_producto = self.get_order_line(id_producto, "tax_id")
                 order_lines.append((0, 0, datos_producto))
-            else:
+            elif cantidad_disponible <= 0 and provedores:
+                datos_producto = self.get_order_line(id_producto, "taxes_id")
                 verificacion = False
-                order_lines_compra.append((0, 0, datos_producto))
-                # logger.error(
-                #     f"******ERROR GENERAR COMPRA {cantidad_disponible} ********"
-                # )
-        # logger.info(f"******DATOS venta {order_lines} ********")
-        # logger.info(f"******DATOS compra {order_lines_compra} ********")
+                # order_lines_compra = ((0, 0, datos_producto))
+                order_lines_compra = [(0, 0, datos_producto)]
+                self.state_validado = "new_valido"
+                for provedor in provedores:
+                    self.generar_compra(order_lines_compra, provedor.name)
+            else:
+                self.state_validado = "new_valido"
+                raise UserError(
+                    f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
+                )
+
         if verificacion is True:
             self.generar_venta(order_lines)
-        else:
-            logger.info(f"******DATOS compra {order_lines_compra} ********")
-            self.generar_compra(order_lines_compra)
+        logger.info(f"******DATOS  {self.producto_compra} ********")
+        # else:
+        #     self.state_validado = "new_valido"  # Seguir validando
+        #     for provedor in provedores:
+        #         # logger.info(f"******DATOS Provedores {provedor.name} ********")
+        #         self.generar_compra(order_lines_compra, provedor.name)
+        #         break
 
-    def get_order_line(self, producto_id):
+    def get_order_line(self, producto_id, tax):
         order_line_vals = {}
         for line in self.orderLines_ids:  # orderLines_ids = No.reistros/productos
             # logger.info(f"****** Valor de producto {producto_id} ********")
@@ -154,7 +162,7 @@ class ExdooRequest(models.Model):
                     "product_uom_qty": line.cantidad,
                     "product_uom": line.unidades_medida.id,
                     "price_unit": line.list_price,
-                    "taxes_id": line.taxes_id,  # [(6, 0, line.taxes_id.ids)],
+                    tax: line.taxes_id,  # [(6, 0, line.taxes_id.ids)],
                     # "discount": line.discount,
                     "price_subtotal": line.subtotal,
                 }
@@ -187,7 +195,7 @@ class ExdooRequest(models.Model):
         self.registro_generado = nuevo_registro.id
         self.sale_order_id = [(4, nuevo_registro.id, 0)]
         self.ventas_count = len(self.sale_order_id)
-        logger.info(f"****** HECHO {self.ventas_count} ********")
+        logger.info(f"****** Cotizacion de venta generada ********")
 
     def action_view_sale(self):
         return {
@@ -206,16 +214,16 @@ class ExdooRequest(models.Model):
 
     purchase_count = fields.Integer(
         copy=False, default=0, store=True
-    )  # compute="_compute_invoice"
+    )  
 
-    def generar_compra(self, order_lines):
+    def generar_compra(self, order_lines, provedor):
         datos_a_transferir = {
-            "partner_id": self.cliente.id,
+            "partner_id": provedor.id,
             "currency_id": self.currency_id.id,
             "date_order": self.fecha,
             "user_id": self.usuario.id,
             "company_id": self.company.id,
-            "picking_type_id": self.almacen.pick_type_id.id,
+            "picking_type_id": self.almacen.in_type_id.id,
             "order_line": order_lines,
             "payment_term_id": self.termino_pagos.id,
         }
@@ -224,7 +232,7 @@ class ExdooRequest(models.Model):
         # self.registro_generado = nuevo_registro.id
         self.purchase_order_id = [(4, nuevo_registro.id, 0)]
         self.purchase_count = len(self.purchase_order_id)
-        logger.info(f"****** HECHO {self.purchase_count} ********")
+        logger.info(f"****** Cotizacion de compra generada ********")
 
     def action_view_purchase(self):
         return {
@@ -251,7 +259,17 @@ class ExdooRequest(models.Model):
         copy=False,
     )
 
-    producto = fields.Many2one(string="Producto", comodel_name="product.product")
+    state_validado = fields.Selection(
+        selection=[
+            ("validado", "Validado"),
+            ("new_valido", "Nueva validacion"),
+        ],
+        copy=False,
+    )
+
+    @api.onchange("orderLines_ids")
+    def _onchange_status_validacion(self):
+        self.state_validado = "new_valido"
 
     ## Funcion lineas de orden relacionado con modulo account.tax.taxes_id
     @api.depends("orderLines_ids")
