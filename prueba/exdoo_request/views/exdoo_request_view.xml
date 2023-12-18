@@ -13,7 +13,9 @@
                     <field name="registro_generado" invisible="1"></field>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
+                    <button string="Crear factura" type="object" name="create_invoice" states="confirmado"></button>
                     <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" attrs="{'invisible': ['|',('state', '!=', 'confirmado'),('state_validado', '==','validado')]}"></button>                   
+                    
                 </header>
                 
              
@@ -24,6 +26,9 @@
                         </button>
                         <button  name="action_view_purchase" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('purchase_count', '=', 0)]}">
                             <field name="purchase_count" widget="statinfo" string="Compras" />
+                        </button>
+                        <button  name="action_view_invoice" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('invoice_count', '=', 0)]}">
+                            <field name="invoice_count" widget="statinfo" string="Facturas" />
                         </button>
                     </div>
                     <div class="oe_title">
@@ -42,7 +47,8 @@
                             <field name="fecha_confirmación" attrs="{'readonly':[('state','!=','borrador')]}"></field>
                             <field name="termino_pagos" ></field>
                             <field name="terminos_pagos_id" invisible="1"></field>
-                            <field name="sale_order_id" widget="many2many_tags"></field>
+                            <field name="sale_order_id" widget="many2many_tags" invisible="1"></field>
+                            <field name="purchase_order_id" widget="many2many_tags" invisible="1"></field>
                         </group>
                         <group>
                             

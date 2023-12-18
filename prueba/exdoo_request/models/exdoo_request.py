@@ -79,7 +79,7 @@ class ExdooRequest(models.Model):
     @api.depends("variantes_productos.qty_available")
     def qty_available_warehouse(self):
         self.state_validado = "validado"
-        if not self.registro_generado and self.orderLines_ids:
+        if self.orderLines_ids:
             qty_available_dict = {}
             warehouse_id = self.almacen.id
             for line in self.orderLines_ids:
@@ -92,7 +92,7 @@ class ExdooRequest(models.Model):
                     cantidad_producto,
                 )
             self.qty_available_temp = (
-                qty_available_cantidad  # campo prueba nuemro de stock
+                qty_available_cantidad  # campo prueba numero de stock
             )
             logger.info(
                 f"****** Función qty_available_warehouse {qty_available_dict}********"
@@ -112,11 +112,15 @@ class ExdooRequest(models.Model):
             cantidad_disponible = cantidad[0] - cantidad[1]
             provedores = self.producto_compra.seller_ids
             if cantidad_disponible > 0:
-                datos_producto = self.get_order_line(id_producto, "tax_id")
+                datos_producto = self.get_order_line(
+                    id_producto, "tax_id", "product_uom_qty", "product_uom"
+                )
                 order_lines.append((0, 0, datos_producto))
             elif cantidad_disponible <= 0 and provedores:
-                datos_producto = self.get_order_line(id_producto, "taxes_id")
                 verificacion = False
+                datos_producto = self.get_order_line(
+                    id_producto, "taxes_id", "product_uom_qty", "product_uom"
+                )
                 order_lines_compra = [(0, 0, datos_producto)]
                 self.state_validado = "new_valido"
                 for provedor in provedores:
@@ -129,14 +133,14 @@ class ExdooRequest(models.Model):
         if verificacion is True:
             self.generar_venta(order_lines)
 
-    def get_order_line(self, producto_id, tax):
+    def get_order_line(self, producto_id, tax, quantity, uom):
         order_line_vals = {}
         for line in self.orderLines_ids:  # orderLines_ids = No.reistros/productos
             if line.producto.id == producto_id:
                 order_line_vals = {
                     "product_id": line.producto.id,
-                    "product_uom_qty": line.cantidad,
-                    "product_uom": line.unidades_medida.id,
+                    quantity: line.cantidad,
+                    uom: line.unidades_medida.id,
                     "price_unit": line.list_price,
                     tax: line.taxes_id,  # [(6, 0, line.taxes_id.ids)],
                     "price_subtotal": line.subtotal,
@@ -144,9 +148,111 @@ class ExdooRequest(models.Model):
                 return order_line_vals
                 # order_lines.append((0, 0, order_line_vals))
 
+    def create_invoice(self):
+        order_lines = []
+        if self.orderLines_ids:
+            for line in self.orderLines_ids:
+                producto = line.producto.id
+                order = self.get_order_line(
+                    producto, "tax_ids", "quantity", "product_uom_id"
+                )
+                order_lines.append((0, 0, order))
+
+            self.generar_factura(order_lines)
+
+    invoice_order_id = fields.Many2many(
+        comodel_name="account.move",
+        string="account Order",
+        help="account Order related to this request",
+    )
+    # invoice_external_order_id = fields.Many2many(
+    #     comodel_name="account.move",
+    #     string="account Order",
+    #     help="account Order related to this request",
+    # )
+
+    invoice_count = fields.Integer(
+        copy=False, default=0, store=True
+    )  # compute="_compute_invoice"
+
+    def generar_factura(self, order_lines):
+        datos_a_transferir = {
+            "partner_id": self.cliente.id,
+            # "date_order": self.fecha,
+            "invoice_payment_term_id": self.termino_pagos.id,
+            "currency_id": self.currency_id,
+            "invoice_user_id": self.usuario.id,
+            "company_id": self.company.id,
+            "move_type": "out_invoice",
+            "invoice_line_ids": order_lines,
+        }
+        ventas_modelo = self.env["account.move"]
+        nuevo_registro = ventas_modelo.create(datos_a_transferir)
+        self.invoice_order_id = [(4, nuevo_registro.id, 0)]
+        self.invoice_count = len(self.invoice_order_id)
+        logger.info(f"****** Factura de venta generada ********")
+
+    # def action_view_invoice(self):
+    #     pass
+
     ventas_count = fields.Integer(
         copy=False, default=0, store=True
     )  # compute="_compute_invoice"
+
+    # @api.depends("sale_order_id")
+    # def action_view_invoice(self):
+    #     for sale_order in self.sale_order_id:
+    #         invoices = self.env["account.move"].search(
+    #             [("invoice_origin", "=", sale_order.name)]
+    #         )
+    #         # self.invoice_order_id = invoices.ids
+    #         self.invoice_order_id = invoices.ids
+    #         logger.info(f"****** Facturas {self.invoice_order_id.ids}********")
+
+    # a = invoices.ids
+
+    # # logger.info(f"****** Facturas {invoices}********")
+    # for invoice in invoices:
+    #     # Aquí puedes trabajar con cada factura asociada a la venta actual
+    #     # Por ejemplo, imprimir el nombre de la factura
+    #     logger.info(f"****** Factura {invoice.name}********")
+    #     # print("Nombre de la factura:", invoice.name)
+
+    @api.depends("sale_order_id")
+    def action_view_invoice(self):
+        logger.info(f"****** Facturas actuales {self.invoice_order_id.ids}********")
+        if len(self.invoice_order_id) == 1:
+            return {
+                "res_model": "account.move",
+                "res_id": self.invoice_order_id.id,
+                "type": "ir.actions.act_window",
+                "view_mode": "form",
+                "view_id": self.env.ref("account.view_out_invoice_tree").id,
+            }
+        else:
+            # domain = [("id", "in", self.invoice_order_id.ids)]
+
+            # for sale_order in self.sale_order_id:
+            #     invoices = self.env["account.move"].search(
+            #         [("invoice_origin", "=", sale_order.name)]
+            #     )
+            #     # self.invoice_order_id = invoices.ids
+            #     self.invoice_order_id = invoices.ids
+            #     logger.info(f"****** Facturas {self.invoice_order_id.ids}********")
+
+            # invoice_order_id = self.invoice_external_order_id.ids
+
+            domain = [("id", "in", self.invoice_order_id.ids)]
+
+            return {
+                "name": "Ventas",
+                "res_model": "account.move",
+                "res_id": self.invoice_order_id.id,
+                "type": "ir.actions.act_window",
+                "view_mode": "tree",
+                "view_id": self.env.ref("account.view_out_invoice_tree").id,
+                "domain": domain,
+            }
 
     sale_order_id = fields.Many2many(
         comodel_name="sale.order",
@@ -174,18 +280,31 @@ class ExdooRequest(models.Model):
 
     # Entrar a nuevo registro de venta
     def action_view_sale(self):
-        return {
-            "res_model": "sale.order",
-            "res_id": self.sale_order_id.id,
-            "type": "ir.actions.act_window",
-            "view_mode": "form",
-            "view_id": self.env.ref("sale.view_order_form").id,
-        }
+        if len(self.sale_order_id) == 1:
+            return {
+                "res_model": "sale.order",
+                "res_id": self.sale_order_id.id,
+                "type": "ir.actions.act_window",
+                "view_mode": "form",
+                "view_id": self.env.ref("sale.view_order_form").id,
+            }
+        else:
+            domain = [("id", "in", self.sale_order_id.ids)]
+
+            return {
+                "name": "Ventas",
+                "res_model": "sale.order",
+                "res_id": self.sale_order_id.ids,
+                "type": "ir.actions.act_window",
+                "view_mode": "tree",
+                "view_id": self.env.ref("sale.view_quotation_tree_with_onboarding").id,
+                "domain": domain,
+            }
 
     purchase_order_id = fields.Many2many(
         comodel_name="purchase.order",
-        string="Compra order",
-        help="purchase Order related to this request",
+        string="Purchase Orders",
+        help="Purchase Orders related to this Exdoo Request",
     )
 
     purchase_count = fields.Integer(copy=False, default=0, store=True)
@@ -201,6 +320,7 @@ class ExdooRequest(models.Model):
             "order_line": order_lines,
             "payment_term_id": self.termino_pagos.id,
         }
+
         compra_modelo = self.env["purchase.order"]
         nuevo_registro = compra_modelo.create(datos_a_transferir)
         # self.registro_generado = nuevo_registro.id
@@ -208,15 +328,26 @@ class ExdooRequest(models.Model):
         self.purchase_count = len(self.purchase_order_id)
         logger.info(f"****** Cotizacion de compra generada ********")
 
-    # Entrar a nuevo registro de Compra
     def action_view_purchase(self):
-        return {
-            "res_model": "purchase.order",
-            "res_id": self.purchase_order_id.id,
-            "type": "ir.actions.act_window",
-            "view_mode": "form",
-            "view_id": self.env.ref("purchase.purchase_order_form").id,
-        }
+        if len(self.purchase_order_id) == 1:
+            return {
+                "res_model": "purchase.order",
+                "res_id": self.purchase_order_id.id,
+                "type": "ir.actions.act_window",
+                "view_mode": "form",
+                "view_id": self.env.ref("purchase.purchase_order_form").id,
+            }
+        else:
+            domain = [("id", "in", self.purchase_order_id.ids)]
+            return {
+                "name": "Compras",
+                "res_model": "purchase.order",
+                "res_id": self.purchase_order_id.ids,
+                "type": "ir.actions.act_window",
+                "view_mode": "tree",
+                "view_id": self.env.ref("purchase.purchase_order_view_tree").id,
+                "domain": domain,
+            }
 
     def confirmar_request(self):
         self.state = "confirmado"
@@ -358,4 +489,3 @@ class RequestOrderLines(models.Model):
             )
             if default_tax:
                 self.taxes_id = [(6, 0, [default_tax.id])]
-  

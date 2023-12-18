@@ -25,7 +25,7 @@ class Presupuesto(models.Model):
 
     detalle_ids = fields.One2many(
         comodel_name="presupuesto.detalle",
-        inverse_name="presupuesto_id",
+    inverse_name="presupuesto_id",
         string="Detalles",
     )
 
