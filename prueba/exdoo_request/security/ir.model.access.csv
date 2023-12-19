@@ -4,3 +4,4 @@ accedo_solicitud_usuario,acceso solicitud usuario,model_exdoo_request,group_usua
 accedo_order_administrador,acceso solicitud administrador,model_request_order_lines,group_administrador_exdoo,1,1,1,1
 accedo_solicitud_administrador,acceso solicitud administrador,model_exdoo_request,group_administrador_exdoo,1,1,1,1
 
+

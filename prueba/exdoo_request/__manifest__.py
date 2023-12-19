@@ -17,5 +17,6 @@
         "./views/res_partner_view.xml",
         "./views/exdoo_request_inh_view.xml",
         "./views/request_order_lines_inh_view.xml",
+        "./views/res_config_settings_inh_view.xml",
     ],
 }

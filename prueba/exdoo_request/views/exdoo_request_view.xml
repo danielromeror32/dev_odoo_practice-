@@ -15,7 +15,8 @@
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
                     <button string="Crear factura" type="object" name="create_invoice" states="confirmado"></button>
                     <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" attrs="{'invisible': ['|',('state', '!=', 'confirmado'),('state_validado', '==','validado')]}"></button>                   
-                    
+                    <!-- <button string="Validar" type="object" name="checck_is_purchase" class="oe_highlight" ></button>                    -->
+
                 </header>
                 
              
