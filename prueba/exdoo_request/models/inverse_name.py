@@ -8,7 +8,7 @@ class SaleOrder(models.Model):
     _description = "Modelo para crear una relacion con solicitudes de exdoo request"
 
     solicitud_id = fields.Many2one(comodel_name="exdoo.request", string="solicitud")
-
+    
 
 class AccountMove(models.Model):
     _inherit = "account.move"

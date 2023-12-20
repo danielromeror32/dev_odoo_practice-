@@ -36,14 +36,13 @@ class ExdooRequest(models.Model):
     @api.depends("sale_order_id")
     def _compute_sales(self):
         self.ventas_count = len(self.sale_order_id)
-
+    
     @api.depends("purchase_order_id")
-    def _compute_sales(self):
+    def _compute_purchase(self):
         self.purchase_count = len(self.purchase_order_id)
 
-    @api.depends("invoice_order_id")
+    @api.depends("invoice_order_id", "invoice_count")
     def _compute_invoice(self):
-        
         self.invoice_count = len(self.invoice_order_id)
 
     @api.depends("cliente")
@@ -83,6 +82,8 @@ class ExdooRequest(models.Model):
     variantes_productos = fields.Many2one(
         comodel_name="product.product", string="variantes_productos"
     )
+    producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
+    provedores = fields.Many2many(comodel_name="res.partner")
 
     # Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
     @api.depends("variantes_productos.qty_available")
@@ -90,13 +91,12 @@ class ExdooRequest(models.Model):
         self.state_validado = "validado"
         if self.orderLines_ids:
             qty_available_dict = {}
-            # warehouse_id = self.almacen.lot_stock_id
-
             for line in self.orderLines_ids:
                 cantidad_producto = line.cantidad
                 qty_available_stock = line.producto.with_context(
                     location=self.almacen.lot_stock_id.id
                 ).qty_available  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
+
                 qty_available_dict[line.producto.id] = (
                     qty_available_stock,
                     cantidad_producto,
@@ -105,9 +105,6 @@ class ExdooRequest(models.Model):
                 f"****** Función qty_available_warehouse {qty_available_dict}********"
             )
             self.confirmar_stock(qty_available_dict)
-
-    producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
-    provedores = fields.Many2many(comodel_name="res.partner")
 
     def check_is_purchase(self):
         current_settings = (
@@ -131,7 +128,7 @@ class ExdooRequest(models.Model):
                     id_producto, "tax_id", "product_uom_qty", "product_uom"
                 )
                 order_lines.append((0, 0, datos_producto))
-            elif cantidad_disponible < 0 and provedores:
+            elif cantidad_disponible < 0:
                 if not provedores:
                     raise UserError(
                         f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
@@ -161,6 +158,7 @@ class ExdooRequest(models.Model):
                 }
                 return order_line_vals
 
+    #   ------------------------------- FACTURA --------------------------
     def create_invoice(self):
         order_lines = []
         if self.orderLines_ids:
@@ -233,6 +231,7 @@ class ExdooRequest(models.Model):
             action = {"type": "ir.actions.act_window_close"}
         return action
 
+    #   ------------------------------- VENTA --------------------------
     ventas_count = fields.Integer(
         copy=False, default=0, store=True, compute="_compute_sales"
     )
@@ -258,7 +257,7 @@ class ExdooRequest(models.Model):
         ventas_modelo = self.env["sale.order"]
         nuevo_registro = ventas_modelo.create(datos_a_transferir)
         # self.sale_order_id = [(4, nuevo_registro.id, 0)]
-        self.sale_order_id = nuevo_registro
+        self.sale_order_id |= nuevo_registro
         # self.ventas_count = len(self.sale_order_id)
         logger.info(f"****** Cotizacion de venta generada ********")
 
@@ -285,6 +284,7 @@ class ExdooRequest(models.Model):
                 "domain": domain,
             }
 
+    #   ------------------------------- COMPRA --------------------------
     purchase_order_id = fields.Many2many(
         comodel_name="purchase.order",
         string="Purchase Orders",
