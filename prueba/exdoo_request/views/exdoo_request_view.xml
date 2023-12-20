@@ -10,12 +10,11 @@
                 <header>
                     <field name="state" widget="statusbar" statusbar_visible="borrador,confirmado"></field>
                     <field name="state_validado" invisible="1"></field>
-                    <field name="registro_generado" invisible="1"></field>
                     <button string="Confirmar" type="object" name="confirmar_request" class="oe_highlight" states="borrador"></button>
                     <button string="Cancelar" type="object" name="cancelar_request" states="borrador,confirmado"></button>
                     <button string="Crear factura" type="object" name="create_invoice" states="confirmado"></button>
                     <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" attrs="{'invisible': ['|',('state', '!=', 'confirmado'),('state_validado', '==','validado')]}"></button>                   
-                    <!-- <button string="Validar" type="object" name="checck_is_purchase" class="oe_highlight" ></button>                    -->
+                    <!-- <button string="Validar" type="object" name="get_values_invoices" class="oe_highlight" ></button>                    -->
 
                 </header>
                 
@@ -31,6 +30,7 @@
                         <button  name="action_view_invoice" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('invoice_count', '=', 0)]}">
                             <field name="invoice_count" widget="statinfo" string="Facturas" />
                         </button>
+
                     </div>
                     <div class="oe_title">
                         <div class="o_row">
@@ -49,7 +49,7 @@
                             <field name="termino_pagos" ></field>
                             <field name="terminos_pagos_id" invisible="1"></field>
                             <field name="sale_order_id" widget="many2many_tags" invisible="1"></field>
-                            <field name="purchase_order_id" widget="many2many_tags" invisible="1"></field>
+                            <field name="purchase_order_id"  invisible="1"></field>
                         </group>
                         <group>
                             
@@ -59,7 +59,6 @@
                             <field name="lista_precios" required="1"></field>
                             <field name="almacen" required="1"></field>
                             <field name="variantes_productos" invisible="1"></field>
-                            <field name="qty_available_temp"></field>
                         </group>    
                     </group>
                     <notebook>

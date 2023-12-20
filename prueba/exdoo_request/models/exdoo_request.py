@@ -33,6 +33,19 @@ class ExdooRequest(models.Model):
         compute="_compute_terminos_pago_id",
     )
 
+    @api.depends("sale_order_id")
+    def _compute_sales(self):
+        self.ventas_count = len(self.sale_order_id)
+
+    @api.depends("purchase_order_id")
+    def _compute_sales(self):
+        self.purchase_count = len(self.purchase_order_id)
+
+    @api.depends("invoice_order_id")
+    def _compute_invoice(self):
+        
+        self.invoice_count = len(self.invoice_order_id)
+
     @api.depends("cliente")
     def _compute_terminos_pago_id(self):
         self.termino_pagos = False
@@ -71,9 +84,30 @@ class ExdooRequest(models.Model):
         comodel_name="product.product", string="variantes_productos"
     )
 
-    qty_available_temp = fields.Float(string="Cantidad a la mano")
+    # Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
+    @api.depends("variantes_productos.qty_available")
+    def qty_available_warehouse(self):
+        self.state_validado = "validado"
+        if self.orderLines_ids:
+            qty_available_dict = {}
+            # warehouse_id = self.almacen.lot_stock_id
 
-    registro_generado = fields.Char(string="Nombre del registro")
+            for line in self.orderLines_ids:
+                cantidad_producto = line.cantidad
+                qty_available_stock = line.producto.with_context(
+                    location=self.almacen.lot_stock_id.id
+                ).qty_available  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
+                qty_available_dict[line.producto.id] = (
+                    qty_available_stock,
+                    cantidad_producto,
+                )
+            logger.info(
+                f"****** Función qty_available_warehouse {qty_available_dict}********"
+            )
+            self.confirmar_stock(qty_available_dict)
+
+    producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
+    provedores = fields.Many2many(comodel_name="res.partner")
 
     def check_is_purchase(self):
         current_settings = (
@@ -82,35 +116,8 @@ class ExdooRequest(models.Model):
         is_purchase_value = current_settings.is_purchase
         return is_purchase_value
 
-    # Funcion para sacar el id del almacen y los productos seleccionados en la linea de orden
-    @api.depends("variantes_productos.qty_available")
-    def qty_available_warehouse(self):
+    def confirmar_stock(self, qty_available_dict):
         compra_permitida = self.check_is_purchase()
-        self.state_validado = "validado"
-        if self.orderLines_ids:
-            qty_available_dict = {}
-            warehouse_id = self.almacen.id
-            for line in self.orderLines_ids:
-                cantidad_producto = line.cantidad
-                qty_available_cantidad = line.producto.with_context(
-                    warehouse=warehouse_id
-                ).qty_available  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
-                qty_available_dict[line.producto.id] = (
-                    qty_available_cantidad,
-                    cantidad_producto,
-                )
-            self.qty_available_temp = (
-                qty_available_cantidad  # campo prueba numero de stock
-            )
-            logger.info(
-                f"****** Función qty_available_warehouse {qty_available_dict}********"
-            )
-            self.confirmar_stock(qty_available_dict, compra_permitida)
-
-    producto_compra = fields.Many2one(string="Producto", comodel_name="product.product")
-    provedores = fields.Many2many(comodel_name="res.partner")
-
-    def confirmar_stock(self, qty_available_dict, compra_permitida):
         verificacion = True
         order_lines = []
         # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
@@ -119,12 +126,12 @@ class ExdooRequest(models.Model):
             self.producto_compra = id_producto
             cantidad_disponible = cantidad[0] - cantidad[1]
             provedores = self.producto_compra.seller_ids
-            if cantidad_disponible > 0 or not compra_permitida:
+            if cantidad_disponible >= 0 or not compra_permitida:
                 datos_producto = self.get_order_line(
                     id_producto, "tax_id", "product_uom_qty", "product_uom"
                 )
                 order_lines.append((0, 0, datos_producto))
-            elif cantidad_disponible <= 0 and provedores:
+            elif cantidad_disponible < 0 and provedores:
                 if not provedores:
                     raise UserError(
                         f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
@@ -137,7 +144,6 @@ class ExdooRequest(models.Model):
                 self.state_validado = "new_valido"
                 for provedor in provedores:
                     self.generar_compra(order_lines_compra, provedor.name)
-
         if verificacion is True:
             self.generar_venta(order_lines)
 
@@ -167,15 +173,16 @@ class ExdooRequest(models.Model):
 
             self.generar_factura(order_lines)
 
-    invoice_order_id = fields.Many2many(
+    invoice_order_id = fields.One2many(
         comodel_name="account.move",
+        inverse_name="solicitud_id",
         string="account Order",
         help="account Order related to this request",
     )
 
     invoice_count = fields.Integer(
-        copy=False, default=0, store=True
-    )  # compute="_compute_invoice"
+        copy=False, default=0, store=True, compute="_compute_invoice"
+    )
 
     def generar_factura(self, order_lines):
         datos_a_transferir = {
@@ -188,68 +195,51 @@ class ExdooRequest(models.Model):
             "move_type": "out_invoice",
             "invoice_line_ids": order_lines,
         }
-        ventas_modelo = self.env["account.move"]
-        nuevo_registro = ventas_modelo.create(datos_a_transferir)
-        self.invoice_order_id = [(4, nuevo_registro.id, 0)]
-        self.invoice_count = len(self.invoice_order_id)
+        factura_modelo = self.env["account.move"]
+        nuevo_registro = factura_modelo.create(datos_a_transferir)
+        self.invoice_order_id |= nuevo_registro
+        # self.invoice_count = len(self.invoice_order_id)
         logger.info(f"****** Factura de venta generada ********")
 
-    def get_values_invoices(self):
-        accumulated_invoices = self.invoice_order_id.ids
-        for sale_order in self.sale_order_id:
-            invoices = self.env["account.move"].search(
-                [("invoice_origin", "=", sale_order.name)]
-            )
-            accumulated_invoices += invoices.ids  # Agregar nuevos registros
-        for purchase_order in self.purchase_order_id:
-            invoices = self.env["account.move"].search(
-                [("invoice_origin", "=", purchase_order.name)]
-            )
-            accumulated_invoices += invoices.ids  # Agregar nuevos registros
-        self.invoice_order_id = [(6, 0, accumulated_invoices)]  # Actualizar el campo
-        self.invoice_count = len(self.invoice_order_id)
+    invoice_count = fields.Integer(
+        copy=False, default=0, store=True, compute="_compute_invoice"
+    )
 
-    @api.depends("sale_order_id")
+    def get_values_invoices(self):
+        for order in self.sale_order_id:
+            self.invoice_order_id |= order.invoice_ids
+        for order in self.purchase_order_id:
+            self.invoice_order_id |= order.invoice_ids
+
+    # Entrar a registros de FACTURAS
     def action_view_invoice(self):
         self.get_values_invoices()
-        logger.info(f"****** Facturas actualizadas {self.invoice_order_id.ids}********")
-        # logger.info(f"****** Facturas actualizadas {self.invoice_order_id.ids}********")
-        accumulated_invoices = self.invoice_order_id.ids
-        for sale_order in self.sale_order_id:
-            invoices = self.env["account.move"].search(
-                [("invoice_origin", "=", sale_order.name)]
-            )
-            accumulated_invoices += invoices.ids  # Agregar nuevos registros
-        self.invoice_order_id = [(6, 0, accumulated_invoices)]  # Actualizar el campo
-        self.invoice_count = len(self.invoice_order_id)
-        logger.info(f"****** Facturas actualizadas {self.invoice_order_id.ids}********")
-
-        if len(self.invoice_order_id) == 1:
-            return {
-                "res_model": "account.move",
-                "res_id": self.invoice_order_id.id,
-                "type": "ir.actions.act_window",
-                "view_mode": "form",
-                "view_id": self.env.ref("account.view_move_form").id,
-            }
+        invoices = self.mapped("invoice_order_id")
+        action = self.env["ir.actions.actions"]._for_xml_id(
+            "account.action_move_out_invoice_type"
+        )
+        if len(invoices) > 1:
+            action["domain"] = [("id", "in", invoices.ids)]
+        elif len(invoices) == 1:
+            form_view = [(self.env.ref("account.view_move_form").id, "form")]
+            if "views" in action:
+                action["views"] = form_view + [
+                    (state, view) for state, view in action["views"] if view != "form"
+                ]
+            else:
+                action["views"] = form_view
+            action["res_id"] = invoices.id
         else:
-            domain = [("id", "in", self.invoice_order_id.ids)]
-            return {
-                "name": "Facturas",
-                "res_model": "account.move",
-                "res_id": self.invoice_order_id.ids,
-                "type": "ir.actions.act_window",
-                "view_mode": "tree",
-                "view_id": self.env.ref("account.view_out_invoice_tree").id,
-                "domain": domain,
-            }
+            action = {"type": "ir.actions.act_window_close"}
+        return action
 
     ventas_count = fields.Integer(
-        copy=False, default=0, store=True
-    )  # compute="_compute_invoice"
+        copy=False, default=0, store=True, compute="_compute_sales"
+    )
 
-    sale_order_id = fields.Many2many(
+    sale_order_id = fields.One2many(
         comodel_name="sale.order",
+        inverse_name="solicitud_id",
         string="Sale Order",
         help="Sale Order related to this request",
     )
@@ -267,9 +257,9 @@ class ExdooRequest(models.Model):
         }
         ventas_modelo = self.env["sale.order"]
         nuevo_registro = ventas_modelo.create(datos_a_transferir)
-        self.registro_generado = nuevo_registro.id
-        self.sale_order_id = [(4, nuevo_registro.id, 0)]
-        self.ventas_count = len(self.sale_order_id)
+        # self.sale_order_id = [(4, nuevo_registro.id, 0)]
+        self.sale_order_id = nuevo_registro
+        # self.ventas_count = len(self.sale_order_id)
         logger.info(f"****** Cotizacion de venta generada ********")
 
     # Entrar a nuevo registro de venta
@@ -288,10 +278,10 @@ class ExdooRequest(models.Model):
             return {
                 "name": "Ventas",
                 "res_model": "sale.order",
-                "res_id": self.sale_order_id.ids,
+                # "res_id": self.sale_order_id.ids,
                 "type": "ir.actions.act_window",
-                "view_mode": "tree",
-                "view_id": self.env.ref("sale.view_quotation_tree_with_onboarding").id,
+                "view_mode": "tree,form",
+                # "view_id": self.env.ref("sale.view_quotation_tree_with_onboarding").id,
                 "domain": domain,
             }
 
@@ -301,7 +291,9 @@ class ExdooRequest(models.Model):
         help="Purchase Orders related to this Exdoo Request",
     )
 
-    purchase_count = fields.Integer(copy=False, default=0, store=True)
+    purchase_count = fields.Integer(
+        copy=False, default=0, store=True, compute="_compute_purchase"
+    )
 
     def generar_compra(self, order_lines, provedor):
         datos_a_transferir = {
@@ -317,38 +309,28 @@ class ExdooRequest(models.Model):
 
         compra_modelo = self.env["purchase.order"]
         nuevo_registro = compra_modelo.create(datos_a_transferir)
-        # self.registro_generado = nuevo_registro.id
         self.purchase_order_id = [(4, nuevo_registro.id, 0)]
         self.purchase_count = len(self.purchase_order_id)
         logger.info(f"****** Cotizacion de compra generada ********")
 
     def action_view_purchase(self):
-        if not self.purchase_order_id:
-            return {
-                "name": "Compras",
-                "type": "ir.actions.act_window",
-                "res_model": "purchase.order",
-                "view_mode": "tree,form",
-                "view_id": self.env.ref("purchase.purchase_order_view_tree").id,
-                "domain": [("id", "=", False)],  # Mostrar todos los registros
-            }
         if len(self.purchase_order_id) == 1:
             return {
                 "res_model": "purchase.order",
                 "res_id": self.purchase_order_id.id,
                 "type": "ir.actions.act_window",
                 "view_mode": "form",
-                "view_id": self.env.ref("purchase.purchase_order_view_tree").id,
+                "view_id": self.env.ref("purchase.purchase_order_form").id,
             }
         else:
             domain = [("id", "in", self.purchase_order_id.ids)]
             return {
                 "name": "Compras",
                 "res_model": "purchase.order",
-                "res_id": self.purchase_order_id.ids,
+                # "res_id": self.purchase_order_id.ids,
                 "type": "ir.actions.act_window",
-                "view_mode": "tree",
-                "view_id": self.env.ref("purchase.purchase_order_view_tree").id,
+                "view_mode": "tree,form",
+                # "view_id": self.env.ref("purchase.purchase_order_kpis_tree").id,
                 "domain": domain,
             }
 

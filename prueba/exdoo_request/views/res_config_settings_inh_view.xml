@@ -8,33 +8,25 @@
                 <field name="arch" type="xml">
                     <xpath expr="//div[contains(@class, 'settings')]/div[contains(@class, 'app_settings_block')][2]" position="inside">
                         <h2>Compras</h2>
-                       
                         <div class="row mt16 o_settings_container" name="catalog_setting_container">
-                        <div class="col-12 col-lg-6 o_setting_box" id="variant_options">
-                            
-                        <div class="o_setting_box" id="your_custom_settings">
-                            <div class="o_setting_left_pane">
-                                <field name="is_purchase"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="is_purchase"/>
-                                <div class="text-muted">
-                                    Permitir comparas en el las solicitudes.
+                            <div class="col-12 col-lg-6 o_setting_box" id="variant_options">   
+                                <div class="o_setting_box" id="your_custom_settings">
+                                    <div class="o_setting_left_pane">
+                                        <field name="is_purchase"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label for="is_purchase"/>
+                                        <div class="text-muted">
+                                        Permitir comparas en el las solicitudes.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        </div>
-                    
-                </div>
-            
-
-                        </xpath>
-
+                    </xpath>
                 </field>
         </record>
-</data>
-
-
+    </data>
 </odoo>
 
 
