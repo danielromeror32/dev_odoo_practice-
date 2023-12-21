@@ -36,12 +36,12 @@ class ExdooRequest(models.Model):
     @api.depends("sale_order_id")
     def _compute_sales(self):
         self.ventas_count = len(self.sale_order_id)
-    
+
     @api.depends("purchase_order_id")
     def _compute_purchase(self):
         self.purchase_count = len(self.purchase_order_id)
 
-    @api.depends("invoice_order_id", "invoice_count")
+    @api.depends("invoice_order_id")
     def _compute_invoice(self):
         self.invoice_count = len(self.invoice_order_id)
 
@@ -96,15 +96,15 @@ class ExdooRequest(models.Model):
                 qty_available_stock = line.producto.with_context(
                     location=self.almacen.lot_stock_id.id
                 ).qty_available  # {'Monitores': (0.0, 1.0), 'Teclados': (20.0, 2.0)}********
-
                 qty_available_dict[line.producto.id] = (
                     qty_available_stock,
                     cantidad_producto,
                 )
-            logger.info(
-                f"****** Función qty_available_warehouse {qty_available_dict}********"
-            )
             self.confirmar_stock(qty_available_dict)
+
+    is_purchase = fields.Boolean(
+        string="Permitir compra",
+    )
 
     def check_is_purchase(self):
         current_settings = (
@@ -128,11 +128,7 @@ class ExdooRequest(models.Model):
                     id_producto, "tax_id", "product_uom_qty", "product_uom"
                 )
                 order_lines.append((0, 0, datos_producto))
-            elif cantidad_disponible < 0:
-                if not provedores:
-                    raise UserError(
-                        f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
-                    )
+            elif cantidad_disponible < 0 and provedores:
                 verificacion = False
                 datos_producto = self.get_order_line(
                     id_producto, "taxes_id", "product_uom_qty", "product_uom"
@@ -141,6 +137,10 @@ class ExdooRequest(models.Model):
                 self.state_validado = "new_valido"
                 for provedor in provedores:
                     self.generar_compra(order_lines_compra, provedor.name)
+            else:
+                raise UserError(
+                    f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
+                )
         if verificacion is True:
             self.generar_venta(order_lines)
 
@@ -159,6 +159,12 @@ class ExdooRequest(models.Model):
                 return order_line_vals
 
     #   ------------------------------- FACTURA --------------------------
+    # def read(self, fields=None, load="_classic_read"):
+    #     # Llama al método padre para realizar la lectura normal del registro
+    #     result = super(ExdooRequest, self).read(fields=fields, load=load)
+    #     self.get_values_invoices()
+    #     return result
+
     def create_invoice(self):
         order_lines = []
         if self.orderLines_ids:
@@ -168,7 +174,6 @@ class ExdooRequest(models.Model):
                     producto, "tax_ids", "quantity", "product_uom_id"
                 )
                 order_lines.append((0, 0, order))
-
             self.generar_factura(order_lines)
 
     invoice_order_id = fields.One2many(
