@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_open_materia" model="ir.actions.act_window">
+        <field name="name">Materia</field>
+        <field name="res_model">materia</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record>
+  
+    <menuitem id="main_menu" name="Escuela"/>
+    <menuitem id="horizontal_menu" name="Escuela" parent="main_menu"/>
+    <menuitem id="vertical_menu_materia" name="Materia" parent="horizontal_menu" action="action_open_materia"/>
+
+</odoo>

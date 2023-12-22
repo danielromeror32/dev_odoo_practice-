@@ -3,7 +3,7 @@
 
 
     <record id="action_open_exdoo" model="ir.actions.act_window">
-        <field name="name">Solicitudes</field>
+        <field name="name">Materia</field>
         <field name="res_model">exdoo.request</field>
         <field name="view_mode">tree,form,kanban</field>
     </record>

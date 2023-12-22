@@ -13,10 +13,12 @@ class SaleOrder(models.Model):
 
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
-        for solicitud in self.solicitud_id.sale_order_id:
-            invoice_vals["solicitud_id"] = (
-                self.solicitud_id.id if solicitud.id == self.id else False
-            )
+        # for solicitud in self.solicitud_id.sale_order_id:
+        invoice_vals["solicitud_id"] = (
+            self.solicitud_id.id
+            if self.id in self.solicitud_id.sale_order_id.ids
+            else False
+        )
         return invoice_vals
 
     def _create_invoices(self, grouped=False, final=False, date=None):
