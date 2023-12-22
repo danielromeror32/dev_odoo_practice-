@@ -123,26 +123,26 @@ class ExdooRequest(models.Model):
             self.producto_compra = id_producto
             cantidad_disponible = cantidad[0] - cantidad[1]
             provedores = self.producto_compra.seller_ids
-            if cantidad_disponible >= 0 or not compra_permitida:
-                datos_producto = self.get_order_line(
-                    id_producto, "tax_id", "product_uom_qty", "product_uom"
-                )
-                order_lines.append((0, 0, datos_producto))
-            elif cantidad_disponible < 0 and provedores:
-                verificacion = False
-                datos_producto = self.get_order_line(
-                    id_producto, "taxes_id", "product_uom_qty", "product_uom"
-                )
-                order_lines_compra = [(0, 0, datos_producto)]
-                self.state_validado = "new_valido"
-                for provedor in provedores:
-                    self.generar_compra(order_lines_compra, provedor.name)
-            else:
-                raise UserError(
-                    f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
-                )
-        if verificacion is True:
-            self.generar_venta(order_lines)
+            # Generar las lineas de orden para una venta
+            datos_producto = self.get_order_line(
+                id_producto, "tax_id", "product_uom_qty", "product_uom"
+            )
+            order_lines.append((0, 0, datos_producto))
+            if cantidad_disponible < 0 and compra_permitida:
+                if not provedores:
+                    raise UserError(
+                        f"Agrega un proveedor al producto: {self.producto_compra.default_code} {self.producto_compra.name}"
+                    )
+                else:
+                    # Generar las lineas de orden para una compra
+                    self.state_validado = "new_valido"
+                    datos_producto = self.get_order_line(
+                        id_producto, "taxes_id", "product_uom_qty", "product_uom"
+                    )
+                    order_lines_compra = [(0, 0, datos_producto)]
+                    for provedor in provedores:
+                        self.generar_compra(order_lines_compra, provedor.name)
+        self.generar_venta(order_lines)
 
     def get_order_line(self, producto_id, tax, quantity, uom):
         order_line_vals = {}
@@ -208,15 +208,15 @@ class ExdooRequest(models.Model):
         copy=False, default=0, store=True, compute="_compute_invoice"
     )
 
-    def get_values_invoices(self):
-        for order in self.sale_order_id:
-            self.invoice_order_id |= order.invoice_ids
-        for order in self.purchase_order_id:
-            self.invoice_order_id |= order.invoice_ids
+    # def get_values_invoices(self):
+    #     for order in self.sale_order_id:
+    #         self.invoice_order_id |= order.invoice_ids
+    #     for order in self.purchase_order_id:
+    #         self.invoice_order_id |= order.invoice_ids
 
     # Entrar a registros de FACTURAS
     def action_view_invoice(self):
-        self.get_values_invoices()
+        # self.get_values_invoices()
         invoices = self.mapped("invoice_order_id")
         action = self.env["ir.actions.actions"]._for_xml_id(
             "account.action_move_out_invoice_type"
