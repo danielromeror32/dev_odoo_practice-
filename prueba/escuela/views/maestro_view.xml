@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="maestro_view_form" model="ir.ui.view">
+        <field name="name">maestro.view.form</field>
+        <field name="model">maestro</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group string="Maestro">
+                        <field name="name"></field>
+                        <field name="no_cedula" invisible="1"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="maestro_list_view" model="ir.ui.view">
+        <field name="name">Vista lista de maestro</field>
+        <field name="model">maestro</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="no_cedula"></field>
+                <field name="name"></field>
+                
+            </tree>
+        </field>
+    </record>
+
+</odoo>

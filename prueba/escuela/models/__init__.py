@@ -8,3 +8,5 @@
 ##################################################################################################
 
 from . import materia
+from . import alumno
+from . import maestro

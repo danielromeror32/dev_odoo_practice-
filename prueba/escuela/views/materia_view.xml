@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="materia_view_form" model="ir.ui.view">
+        <field name="name">materia.view.form</field>
+        <field name="model">materia</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="Inactiva,Activa"></field>
+                    <button string="Activar materia" type="object" name="active_subject" states="inactive"></button>
+                    <button string="Materia inactiva" type="object" name="Inactiva_subject" class="oe_highlight" states="active"></button>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" attrs="{'invisible': [('state', 'in', 'inactive')]}"/>
+                        </h1>
+                    </div>
+                    <group name="materia_header">
+                        <group name="materia_details">
+                            <field name="name" required="1"></field>
+                            <field name="no_room"></field>
+                            <field name="schedule"></field>
+                        </group>
+                        <group name="materia_extra_details">
+                            <field name="teacher" required="1"></field>
+                            <field name="no_cedula"></field>
+                            <field name="grade"></field>
+                        </group>    
+                    </group>
+                    <notebook>
+                        <page name="student_list" string="Lista de alumnos">
+                            <field name="alumnos_materia_ids" readonly="0"
+                            widget="section_and_note_one2many"
+                                mode="tree,kanban">
+                                <tree editable="bottom">
+                                    <field name="alumno"/> 
+                                    <field name="age"></field>
+                                    <!-- <field name="final_grade" options="{'widget': 'integer', 'style': 'background-color: ${record.get_color_for_final_grade()}'}"/> -->
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="materia_list_view" model="ir.ui.view">
+        <field name="name">Vista lista de materia</field>
+        <field name="model">materia</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted = "state == 'inactive'" decoration-success="state == 'active'">
+               
+                <field name="name"></field>
+                <field name="teacher"></field>
+                <field name="no_room" string="Numero de Aula"></field>
+                <field name="schedule"></field>
+               
+                <field name="state" widget="badge" decoration-success="state == 'active'" decoration-danger="state == 'inactive'"></field>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_materia_filter"  model="ir.ui.view">
+        <field name="name">materia.filter</field>
+        <field name="model">materia</field>
+        <field name="arch" type="xml">
+            <search>
+                <filter string="Matarias activas" name="state_active" domain="[('state','=','active')]"/>
+                <filter string="Matarias inactivas" name="state_inactive" domain="[('state','=','inactive')]"/>
+                <separator/>
+            </search>
+        </field>
+    </record>
+</odoo>

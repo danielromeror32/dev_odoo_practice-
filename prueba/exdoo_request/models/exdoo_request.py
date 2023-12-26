@@ -423,6 +423,7 @@ class RequestOrderLines(models.Model):
         related="producto.uom_id",
         store=True,
     )
+    
     cantidad = fields.Float(string="cantidad", default=1.0)
 
     list_price = fields.Float(string="Precio unitario", related="producto.list_price")

@@ -15,7 +15,6 @@
                     <button string="Crear factura" type="object" name="create_invoice" states="confirmado"></button>
                     <button string="Validar solicitud" type="object" name="qty_available_warehouse" class="oe_highlight" attrs="{'invisible': ['|',('state', '!=', 'confirmado'),('state_validado', '==','validado')]}"></button>                   
                     <!-- <button string="Validar" type="object" name="get_values_invoices" class="oe_highlight" ></button>                    -->
-
                 </header>
                 
              
@@ -116,6 +115,7 @@
             </tree>
         </field>
     </record>
+    
     <record id="exdoo_request_filter"  model="ir.ui.view">
         <field name="name">exdoo.request.filter</field>
         <field name="model">exdoo.request</field>

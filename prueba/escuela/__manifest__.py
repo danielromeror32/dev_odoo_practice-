@@ -16,5 +16,11 @@
     "description": """
         Módulo de escuela diseñado para recopilar información relacionada con materias, docentes y estudiantes.
     """,
-    "data": ["./views/menu.xml"],
+    "data": [
+        "./views/menu.xml",
+        "./views/materia_view.xml",
+        "./views/alumnos_views.xml",
+        "./views/maestro_view.xml",
+        "./data/seceuences.xml",
+    ],
 }

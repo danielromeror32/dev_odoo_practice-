@@ -6,9 +6,20 @@
         <field name="res_model">materia</field>
         <field name="view_mode">tree,form,kanban</field>
     </record>
+    <record id="action_open_alumno" model="ir.actions.act_window">
+        <field name="name">Alumno</field>
+        <field name="res_model">alumno</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record>
+    <record id="action_open_maestro" model="ir.actions.act_window">
+        <field name="name">Maestro</field>
+        <field name="res_model">maestro</field>
+        <field name="view_mode">tree,form,kanban</field>
+    </record>
   
     <menuitem id="main_menu" name="Escuela"/>
     <menuitem id="horizontal_menu" name="Escuela" parent="main_menu"/>
     <menuitem id="vertical_menu_materia" name="Materia" parent="horizontal_menu" action="action_open_materia"/>
-
+    <menuitem id="vertical_menu_alumno" name="Alumnos" parent="horizontal_menu" action="action_open_alumno"/>
+    <menuitem id="vertical_menu_maestro" name="Maestro" parent="horizontal_menu" action="action_open_maestro"/>
 </odoo>
