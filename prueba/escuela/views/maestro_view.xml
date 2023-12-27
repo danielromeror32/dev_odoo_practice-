@@ -7,10 +7,13 @@
         <field name="arch" type="xml">
             <form string="">
                 <sheet>
-                    <group string="Maestro">
-                        <field name="name"></field>
-                        <field name="no_cedula" invisible="1"></field>
-                    </group>
+                        <group string="Maestro">
+                            <field name="name" required="1"></field>
+                            <field name="no_cedula" invisible="1" required="1"></field>
+                        </group>
+                        <!-- <group>
+                            <field name="materia_ids" widget="one2many_list"/>
+                        </group> -->
                 </sheet>
             </form>
         </field>
@@ -23,7 +26,7 @@
             <tree>
                 <field name="no_cedula"></field>
                 <field name="name"></field>
-                
+               
             </tree>
         </field>
     </record>

@@ -8,9 +8,21 @@ logger = logging.getLogger(__name__)
 
 class Maestro(models.Model):
     _name = "maestro"
+    company_id = fields.Many2one(
+        "res.company", string="Company", default=lambda self: self.env.company
+    )
 
     name = fields.Char(string="Nombre del maestro")
     no_cedula = fields.Char(string="No. cedula", readonly=1)
+
+    # materia_ids = fields.one2many()
+
+    materia_ids = fields.One2many(
+        comodel_name="materia",
+        inverse_name="teacher",
+        string="Materias",
+    )
+    
 
     @api.model
     def create(self, vals):
@@ -21,4 +33,5 @@ class Maestro(models.Model):
             )
             or "/"
         )
+        vals["name"] = vals["name"].title()
         return super(Maestro, self).create(vals)

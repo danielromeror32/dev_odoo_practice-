@@ -36,6 +36,16 @@ class ResConfigSettings(models.TransientModel):
         if company == self.company_id:
             self.company_id.write({"is_purchase": self.is_purchase})
 
+
+
+
+
+
+
+
+
+
+
     # @api.model
     # def get_values(self):
     #     res = super(ResConfigSettings, self).get_values()

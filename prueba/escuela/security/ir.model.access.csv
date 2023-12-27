@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+acceso_materia_usuario,acceso materia usuario,model_materia,group_usuario_escuela,1,1,1,1
+acceso_maestro_usuario,acceso maestro usuario,model_maestro,group_usuario_escuela,1,1,1,1
+acceso_alumno_usuario,acceso alumno usuario,model_alumno,group_usuario_escuela,1,1,1,1
+acceso_alumnos_materia_usuario,acceso alumnos materia usuario,model_alumnos_materia,group_usuario_escuela,1,1,1,1
+acceso_alumnos_materia_administrador,acceso alumnos materia administrador,model_alumnos_materia,group_administrador_escuela,1,1,1,1
+acceso_materia_administrador,acceso materia administrador,model_materia,group_administrador_escuela,1,1,1,1
+acceso_maestro_administrador,acceso maestro administrador,model_maestro,group_administrador_escuela,1,1,1,1
+acceso_alumno_administrador,acceso alumno administrador,model_alumno,group_administrador_escuela,1,1,1,1
+

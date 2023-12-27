@@ -9,7 +9,7 @@
 {
     "name": "Escuela",
     "version": "1.0",
-    "depends": ["base"],
+    "depends": ["mail"],
     "author": "exdoo.mx",
     "category": "Modulo extra",
     "website": "https://www.exdoo.mx/",
@@ -18,6 +18,8 @@
     """,
     "data": [
         "./views/menu.xml",
+        "./security/escuela_security.xml",
+        "./security/ir.model.access.csv",
         "./views/materia_view.xml",
         "./views/alumnos_views.xml",
         "./views/maestro_view.xml",

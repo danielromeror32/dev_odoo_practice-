@@ -7,19 +7,19 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <div class="oe_title">
+                    <!-- <div class="oe_title">
                         <h1>
                             <field name="name" readonly="1" placeholder="Alumno nuevo"/>
                         </h1>
-                    </div>
-                    <group string="AlumnoMaestro">
+                    </div> -->
+                    <group string="Alumno">
                         <group name="student_details">
-                            <field name="name"></field>
-                            <field name="grade"></field>
-                            <field name="age"></field>
+                            <field name="name" required="1"></field>
+                            <field name="last_name" required="1"></field>
+                            <field name="age" required="1"></field>
                         </group>
                         <group>
-                            
+                            <field name="grade" required="1"></field>
                             <field name="no_student" invisible="1"></field>
                         </group>
                             
@@ -35,11 +35,28 @@
         <field name="model">alumno</field>
         <field name="arch" type="xml">
             <tree>
+                
                 <field name="no_student"></field>
                 <field name="name"></field>
+                <field name="last_name"></field>
                 <field name="grade"></field>
                 <field name="age"></field>
             </tree>
+        </field>
+    </record>
+    <record id="view_alumno_filter"  model="ir.ui.view">
+        <field name="name">alumno.filter</field>
+        <field name="model">alumno</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- <filter name="grade" string="Grado del alumno"/> -->
+                <filter string="Grado 1" name="grade" domain="[('grade','=','1')]"/>
+                <filter string="Grado 2" name="grade" domain="[('grade','=','2')]"/>
+                <filter string="Grado 3" name="grade" domain="[('grade','=','3')]"/>
+                <filter name="group_grade_id" string="Grado" icon="terp-partner" context="{'group_by':'grade'}"/>
+                
+                <separator/>
+            </search>
         </field>
     </record>
 

@@ -5,6 +5,7 @@
         <field name="name">Materia</field>
         <field name="res_model">materia</field>
         <field name="view_mode">tree,form,kanban</field>
+        <field name="context">{'search_default_state_active': 1}</field>
     </record>
     <record id="action_open_alumno" model="ir.actions.act_window">
         <field name="name">Alumno</field>
