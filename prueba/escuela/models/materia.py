@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 class Materia(models.Model):
     _name = "materia"
+    _description = "Registros de materia"
     _inherit = ["mail.thread", "mail.activity.mixin"]
 
     name = fields.Char(string="Materia")
@@ -16,8 +17,8 @@ class Materia(models.Model):
         "res.company", string="Company", default=lambda self: self.env.company
     )
 
-    teacher = fields.Many2one(comodel_name="maestro", string="Maestro")
-    no_cedula = fields.Char(string="No. Cedula maestro", related="teacher.no_cedula")
+    teacher_id = fields.Many2one(comodel_name="maestro", string="Maestro")
+    no_cedula = fields.Char(string="No. Cedula maestro", related="teacher_id.no_cedula")
     no_room = fields.Integer(string="Numero de Aula")
     state = fields.Selection(
         selection=[
@@ -26,18 +27,18 @@ class Materia(models.Model):
             ("inactive", "Inactiva"),
         ],
         default="borrador",
+        string="Estado",
     )
     grade = fields.Selection(
         selection=[("1", "Grado 1"), ("2", "Grado 2"), ("3", "Grado 3")],
         string="Grado",
     )
-    alumno = fields.Many2one("alumno")
 
     alumnos_materia_ids = fields.One2many(
         comodel_name="alumnos.materia",
         inverse_name="materia_id",
         string="Alumnos",
-        domain="[('alumno.grade', '=', grade)]",
+        domain="[('alumno_id.grade', '=', grade)]",
     )
 
     # @api.onchange("grade")
@@ -64,10 +65,18 @@ class Materia(models.Model):
         default="7 - 8",
     )
 
+    @api.constrains("no_room")
+    def _check_age_range(self):
+        for room in self:
+            if room.no_room > 500 or room.no_room < 0:
+                raise ValidationError(
+                    "Número de aula no válida. Por favor, introduzca un número de aula válido."
+                )
+
     def active_subject(self):
         self.state = "active"
         self.start_date = fields.Datetime.now()
-        body = "El estado ha cambiado a {}".format(self.state)
+        body = f"Materia activada"
         subtype_id = (
             self.env["mail.message.subtype"]
             .search([("name", "=", "Discusión")], limit=1)
@@ -78,7 +87,7 @@ class Materia(models.Model):
     def Inactiva_subject(self):
         self.state = "inactive"
         self.end_date = fields.Datetime.now()
-        body = "El estado ha cambiado a {}".format(self.state)
+        body = f"Materia inactiva"
         subtype_id = (
             self.env["mail.message.subtype"]
             .search([("name", "=", "Discusión")], limit=1)
@@ -88,31 +97,30 @@ class Materia(models.Model):
 
 
 class AlumnosMateria(models.Model):
+    _description = "Seguimiento de lista de los alumnos"
     _name = "alumnos.materia"
 
     materia_id = fields.Many2one(comodel_name="materia", string="Materia")
 
-    alumno = fields.Many2one(string="Nombre del alumno", comodel_name="alumno")
-    full_name = fields.Char(string="Nombre del alumno", related="alumno.full_name")
+    alumno_id = fields.Many2one(comodel_name="alumno")
+    full_name = fields.Char(string="Nombre del alumno", related="alumno_id.full_name")
 
-    age = fields.Integer(string="Edad", related="alumno.age")
-
-    # grade = fields.Integer(string="Grado", related="alumno.grade")
+    age = fields.Integer(string="Edad", related="alumno_id.age")
 
     final_grade = fields.Float(string="Calificación")
 
-    @api.onchange("alumno")
+    @api.onchange("alumno_id")
     def _onchange_materia_id(self):
         return {
             "domain": {
-                "alumno": [("grade", "=", self.materia_id.grade)],
+                "alumno_id": [("grade", "=", self.materia_id.grade)],
             }
         }
 
     @api.constrains("final_grade")
     def _check_age_range(self):
-        for record in self:
-            if record.final_grade > 10 or record.final_grade < 0:
+        for score in self:
+            if score.final_grade > 10 or score.final_grade < 0:
                 raise ValidationError(
-                    "Edad no válida. Por favor, introduzca una edad en el rango de 1 a 10."
+                    "Calificación no válida. Por favor, introduzca una calificación en el rango de 0 a 10."
                 )

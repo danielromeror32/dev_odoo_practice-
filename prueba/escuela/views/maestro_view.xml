@@ -24,7 +24,7 @@
         <field name="model">maestro</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="no_cedula"></field>
+                <field name="no_cedula" decoration-bf="1"></field>
                 <field name="name"></field>
                
             </tree>

@@ -423,7 +423,7 @@ class RequestOrderLines(models.Model):
         related="producto.uom_id",
         store=True,
     )
-    
+
     cantidad = fields.Float(string="cantidad", default=1.0)
 
     list_price = fields.Float(string="Precio unitario", related="producto.list_price")
@@ -447,7 +447,7 @@ class RequestOrderLines(models.Model):
     )
 
     # Funcion para
-    @api.onchange("cantidad", "list_price", "discount")
+    @api.onchange("cantidad", "list_price")
     def _onchange_cantidad(self):
         self.subtotal = self.cantidad * self.list_price
 

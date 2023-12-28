@@ -8,9 +8,9 @@
             <form>
                 <header>
                     
-                    <button string="Activar materia" type="object" name="active_subject" class="oe_highlight" states="borrador,inactive"></button>
+                    <button string="Activar materia" type="object" name="active_subject" class="oe_highlight" states="borrador"></button>
                     <button string="Materia inactiva" type="object" name="Inactiva_subject"  states="borrador,active"></button>
-                    <field name="state" widget="statusbar" statusbar_visible="Borrador,Materia inactiva,Activa"></field>
+                    <field name="state" widget="statusbar" statusbar_visible="Borrador,Materia inactiva,Materia activada"></field>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -28,7 +28,7 @@
                         <group name="materia_extra_details">
                             <field name="no_room"></field>
                             <field name="grade"></field>
-                            <field name="teacher" required="1" ></field>
+                            <field name="teacher_id" required="1" ></field>
                             <field name="no_cedula"></field>
                            
                         </group>    
@@ -41,11 +41,8 @@
                                 <tree editable="bottom" 
                                 decoration-success="final_grade in (10,9)"
                                 decoration-warning="final_grade in (8,7)"
-                                decoration-danger ="final_grade &lt; 6"
-                                >
-                                    <field name="alumno"/> 
-                                    <!-- <field name="full_name"></field> -->
-                                    <!-- <field name="grade"></field> -->
+                                decoration-danger ="final_grade &lt; 6">
+                                    <field name="alumno_id"/> 
                                     <field name="age" readonly="1"></field>
                                     <field name="final_grade" options="{'widget': 'integer', 'style': 'background-color: ${record.get_color_for_final_grade()}'}"/>
                                 </tree>
@@ -67,15 +64,14 @@
         <field name="model">materia</field>
         
         <field name="arch" type="xml">
-            <tree decoration-muted = "state == 'inactive'" decoration-success="state == 'active'">
-               
-                <field name="name"></field>
-                <field name="teacher" ></field>
-                <field name="no_room" string="Numero de Aula"></field>
+            <!-- decoration-danger = "state == 'inactive'" decoration-success="state == 'active'" decoration-muted = "state == 'borrador'" -->
+            <tree decoration-muted = "state == 'borrador'"> 
+                <field name="name" decoration-bf="1"></field>
                 <field name="schedule"></field>
+                <field name="teacher_id" ></field>
+                <field name="no_room" string="Numero de Aula"></field>
                 <field name="start_date"></field>
                 <field name="end_date"></field>
-                <field name="schedule"></field>
                 <field name="state" widget="badge" decoration-success="state == 'active'" decoration-danger="state == 'inactive'"></field>
             </tree>
         </field>
@@ -90,7 +86,7 @@
                 <filter string="Materias activas" name="state_active" domain="[('state','=','active')]"/>
                 <filter string="Materias inactivas" name="state_inactive" domain="[('state','=','inactive')]"/>
                 <filter string="Fecha de inicio" name="start_date" date="create_date"/>
-                <filter name="group_teacher_id" string="Maestro" icon="terp-partner" context="{'group_by':'teacher'}"/>
+                <filter name="group_teacher_id" string="Maestro" icon="terp-partner" context="{'group_by':'teacher_id'}"/>
                 <filter name="group_state_id" string="Estado" icon="terp-partner" context="{'group_by':'state'}"/>
                 <filter name="group_start_date_id" string="Fecha de inicio" icon="terp-partner" context="{'group_by':'start_date'}"/>
                 <separator/>

@@ -31,15 +31,15 @@ class Alumno(models.Model):
 
     @api.depends("name", "last_name")
     def _compute_full_name(self):
-        for record in self:
-            record.full_name = f"{record.name} {record.last_name}"
+        for name in self:
+            name.full_name = f"{name.name} {name.last_name}"
 
     @api.constrains("age")
     def _check_age_range(self):
         for record in self:
             if record.age > 120 or record.age < 0:
                 raise ValidationError(
-                    "Edad no válida. Por favor, introduzca una edad en el rango de 1 a 10."
+                    "Edad no válida. Por favor, introduzca una edad válida."
                 )
 
     @api.model

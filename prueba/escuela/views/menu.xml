@@ -20,7 +20,8 @@
   
     <menuitem id="main_menu" name="Escuela"/>
     <menuitem id="horizontal_menu" name="Escuela" parent="main_menu"/>
+    <menuitem id="horizontal_menu_personal" name="Personal" parent="main_menu"/>
     <menuitem id="vertical_menu_materia" name="Materia" parent="horizontal_menu" action="action_open_materia"/>
     <menuitem id="vertical_menu_alumno" name="Alumnos" parent="horizontal_menu" action="action_open_alumno"/>
-    <menuitem id="vertical_menu_maestro" name="Maestro" parent="horizontal_menu" action="action_open_maestro"/>
+    <menuitem id="vertical_menu_maestro" name="Maestro" parent="horizontal_menu_personal" action="action_open_maestro"/>
 </odoo>

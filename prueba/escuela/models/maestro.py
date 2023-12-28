@@ -19,10 +19,9 @@ class Maestro(models.Model):
 
     materia_ids = fields.One2many(
         comodel_name="materia",
-        inverse_name="teacher",
+        inverse_name="teacher_idrecord",
         string="Materias",
     )
-    
 
     @api.model
     def create(self, vals):
